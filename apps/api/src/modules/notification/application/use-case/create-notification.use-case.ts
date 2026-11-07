@@ -13,18 +13,24 @@ import { NotificationRepository } from '@/modules/notification/application/ports
 import { Notification } from '@/modules/notification/domain/entities/notification.entity'
 
 const formatNotificationMessage = (notification: Notification) => {
-  const level = { error: '🔴 Error', warning: '🟡 Warning', info: '🔵 Info' }[
-    notification.level
-  ]
+  const level = {
+    error: '🔴 Error',
+    warning: '🟡 Warning',
+    info: '🔵 Info',
+  }[notification.level]
+
+  const payload =
+    notification.payload && Object.keys(notification.payload).length > 0
+      ? `Details:\n\`\`\`json\n${JSON.stringify(notification.payload, null, 2)}\n\`\`\``
+      : null
 
   return [
     `${level}: ${notification.title}`,
     '',
     notification.body,
+    `Device ID: ${notification.deviceId}`,
     notification.scheduleId ? `Schedule ID: ${notification.scheduleId}` : null,
-    notification.payload
-      ? `Details:\n\`\`\`json\n${JSON.stringify(notification.payload, null, 2)}\n\`\`\``
-      : null,
+    payload,
   ]
     .filter(Boolean)
     .join('\n')
