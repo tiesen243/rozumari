@@ -1,7 +1,9 @@
-import { Schema } from 'effect'
+import { waitUntil } from '@vercel/functions'
 import * as Effect from 'effect/Effect'
-import { HttpRouter, HttpServerResponse } from 'effect/http'
+import * as HttpRouter from 'effect/http/HttpRouter'
 import * as HttpServerRequest from 'effect/http/HttpServerRequest'
+import * as HttpServerResponse from 'effect/http/HttpServerResponse'
+import * as Schema from 'effect/Schema'
 
 import { bot } from '@/modules/ai/infrastructure/services/bot'
 
@@ -17,7 +19,7 @@ const handlerReq = Effect.fn(function* BotControllerHandler(
   const handler = bot.webhooks[platform as Platform]
   const req = yield* HttpServerRequest.toWeb(_req)
 
-  const res = yield* Effect.promise(() => handler(req))
+  const res = yield* Effect.promise(() => handler(req, { waitUntil }))
   return HttpServerResponse.fromWeb(res)
 })
 
