@@ -7,9 +7,28 @@ import * as Context from 'effect/Context'
 import * as Effect from 'effect/Effect'
 import * as Layer from 'effect/Layer'
 
+import { postMessage } from '@/modules/ai/infrastructure/services/bot/shared'
 import { DeviceService } from '@/modules/device/application/ports/device.service'
 import { NotificationRepository } from '@/modules/notification/application/ports/notification.repository'
 import { Notification } from '@/modules/notification/domain/entities/notification.entity'
+
+const formatNotificationMessage = (notification: Notification) => {
+  const level = { error: '🔴 Error', warning: '🟡 Warning', info: '🔵 Info' }[
+    notification.level
+  ]
+
+  return [
+    `${level}: ${notification.title}`,
+    '',
+    notification.body,
+    notification.scheduleId ? `Schedule ID: ${notification.scheduleId}` : null,
+    notification.payload
+      ? `Details:\n\`\`\`json\n${JSON.stringify(notification.payload, null, 2)}\n\`\`\``
+      : null,
+  ]
+    .filter(Boolean)
+    .join('\n')
+}
 
 export class CreateNotificationUseCase extends Context.Service<
   CreateNotificationUseCase,
@@ -44,6 +63,11 @@ export class CreateNotificationUseCase extends Context.Service<
           deviceId,
         })
         yield* notificationRepository.save(notification)
+
+        yield* postMessage(
+          device.userId,
+          formatNotificationMessage(notification)
+        )
 
         return {
           id: notification.id,
