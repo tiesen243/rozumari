@@ -73,7 +73,7 @@ export class CreateNotificationUseCase extends Context.Service<
         yield* postMessage(
           device.userId,
           formatNotificationMessage(notification)
-        )
+        ).pipe(Effect.ignore)
 
         return {
           id: notification.id,

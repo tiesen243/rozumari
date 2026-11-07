@@ -24,5 +24,4 @@ export const postMessage = Effect.fn(function* postMessage(
 
   yield* Effect.promise(() => bot.initialize())
   yield* Effect.promise(() => bot.thread(thread.threadId).post(message))
-  // oxlint-disable-next-line promise/prefer-await-to-then
-}, Effect.catch(Effect.asVoid))
+})
