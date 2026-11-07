@@ -1,7 +1,7 @@
 import type { UserId } from '@rozumari/contract/user/schemas/user.schema'
 
 import { eq } from 'drizzle-orm'
-import { Effect } from 'effect'
+import * as Effect from 'effect/Effect'
 
 import { chatStateSubscriptions } from '@/modules/ai/infrastructure/persistence/drizzle/schema'
 import { bot } from '@/modules/ai/infrastructure/services/bot'
@@ -24,4 +24,5 @@ export const postMessage = Effect.fn(function* postMessage(
 
   yield* Effect.promise(() => bot.initialize())
   yield* Effect.promise(() => bot.thread(thread.threadId).post(message))
-})
+  // oxlint-disable-next-line promise/prefer-await-to-then
+}, Effect.catch(Effect.asVoid))
