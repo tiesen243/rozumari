@@ -16,6 +16,8 @@ from tasks.streaming import Streaming
 from tasks.sync_schedule import SyncSchedule
 
 CONFIG_MODE_VALUE = 0
+NORMAL_MODE_VALUE = 1
+SWITCH_DEBOUNCE_MS = 50
 
 
 class Bootstrap:
@@ -30,10 +32,16 @@ class Bootstrap:
     _link: Link
 
     _switch: Pin
+    _switch_flag: asyncio.ThreadSafeFlag
 
     def __init__(self) -> None:
         pins = Pins.create()
         self._switch = pins.switch
+        self._switch_flag = asyncio.ThreadSafeFlag()
+        self._switch.irq(
+            trigger=Pin.IRQ_FALLING | Pin.IRQ_RISING,
+            handler=self._switch_irq_handler,
+        )
 
         self._wifi = WiFi.create()
         self._streaming = Streaming.create()
@@ -43,47 +51,57 @@ class Bootstrap:
         self._display = Display.create()
         self._link = Link.create()
 
-        self._display.show_boot_logo()
+    def _switch_irq_handler(self, pin: Pin) -> None:
+        self._switch_flag.set()
 
-    async def _config_mode(self, stop_event: asyncio.Event) -> None:
+    async def _wait_for_switch_change(
+        self, current_mode: int, mode_task: asyncio.Task
+    ) -> None:
+        while not mode_task.done():
+            await self._switch_flag.wait()
+            await asyncio.sleep(SWITCH_DEBOUNCE_MS / 1000)
+
+            if self._switch.value() == current_mode:
+                continue
+
+            mode_task.cancel()
+            return
+
+    async def _config_mode(self) -> None:
         """Run Config Mode (BLE) until the mode switch is released."""
-        self._ble = BLE.create()
-        self._display.show_config_mode()
-
-        if not self._ble.is_ready():
-            self._ble.activate()
-
-        if self._ble.is_connected():
-            self._ble.disconnect()
-
-        self._ble.start_advertising()
-        print(t("config.started"))
-
         try:
-            while self._switch.value() == CONFIG_MODE_VALUE and not stop_event.is_set():
-                await asyncio.sleep(0.2)
+            self._ble = BLE.create()
+            self._display.show_config_mode()
+
+            if not self._ble.is_ready():
+                self._ble.activate()
+
+            if self._ble.is_connected():
+                self._ble.disconnect()
+
+            self._ble.start_advertising()
+            print(t("config.started"))
+
+            while True:
+                await asyncio.sleep(3600)
+        except asyncio.CancelledError:
+            raise
+
         except Exception as e:
             print(t("config.error", error=e))
+
         finally:
-            if self._ble:
+            if self._ble and self._ble.is_connected():
                 self._ble.stop()
             print(t("config.stopped"))
 
-    async def _watch_switch_in_normal(self, stop_event: asyncio.Event) -> None:
-        """Monitor the switch during Normal Mode and signal stop_event when toggled to Config Mode."""
-        while not stop_event.is_set():
-            if self._switch.value() == CONFIG_MODE_VALUE:
-                print(t("normal.switch_triggered"))
-                stop_event.set()
-                break
-            await asyncio.sleep(0.3)
-
-    async def _normal_mode(self, stop_event: asyncio.Event) -> None:
+    async def _normal_mode(self) -> None:
         """Run Normal Mode (WiFi, Sync, Tasks) and terminate cleanly when stop_event is set."""
         _ = Config.create(force=True)
+        self._display.show_boot_logo()
 
         retry_count, max_retries, is_connected = 0, 3, False
-        while retry_count < max_retries and not stop_event.is_set():
+        while retry_count < max_retries:
             is_connected = await self._wifi.connect()
             if is_connected:
                 break
@@ -98,16 +116,13 @@ class Bootstrap:
             self._wifi.reset()
             await asyncio.sleep(2)
 
-        if stop_event.is_set():
-            return
-
         if not is_connected:
             print(t("setup.wifi_failed_max"))
             return
 
         print(t("setup.syncing_time"))
         retry_count, max_retries = 0, 3
-        while is_connected and retry_count < max_retries and not stop_event.is_set():
+        while is_connected and retry_count < max_retries:
             try:
                 ntptime.settime()
                 print(t("setup.time_synced"))
@@ -124,9 +139,6 @@ class Bootstrap:
                 )
                 await asyncio.sleep(2)
 
-        if stop_event.is_set():
-            return
-
         print(t("setup.syncing_device"))
         _ = await self._sync_info.execute()
 
@@ -141,33 +153,57 @@ class Bootstrap:
             asyncio.create_task(self._sync_schedule.start()),
             asyncio.create_task(self._streaming.start()),
             asyncio.create_task(self._schedules.start()),
-            asyncio.create_task(self._watch_switch_in_normal(stop_event)),
         ]
 
         try:
-            while not stop_event.is_set():
-                await asyncio.sleep(0.5)
+            while True:
+                await asyncio.sleep(3600)
         finally:
             print(t("normal.cleaning"))
             for task in tasks:
                 task.cancel()
+
             await asyncio.gather(*tasks, return_exceptions=True)
             print(t("normal.stopped"))
+
+    async def _run_mode(self, mode: int) -> None:
+        mode_name = "Unknown Mode"
+
+        if mode == CONFIG_MODE_VALUE:
+            mode_name = "Config Mode"
+            mode_coro = self._config_mode()
+        elif mode == NORMAL_MODE_VALUE:
+            mode_name = "Normal Mode"
+            mode_coro = self._normal_mode()
+        else:
+            raise ValueError("Invalid mode value")
+
+        mode_task = asyncio.create_task(mode_coro)
+        switch_task = asyncio.create_task(self._wait_for_switch_change(mode, mode_task))
+
+        try:
+            await mode_task
+
+        except asyncio.CancelledError:
+            print(f"{mode_name} MODE interrupted")
+
+        except Exception as error:
+            print(t("error.unexpected", error=error))
+
+        finally:
+            switch_task.cancel()
+            await asyncio.gather(
+                switch_task,
+                return_exceptions=True,
+            )
 
     async def start(self) -> None:
         """Main loop managing seamless soft transitions between Config Mode and Normal Mode."""
         while True:
-            mode_stop_event = asyncio.Event()
-
-            if self._switch.value() == CONFIG_MODE_VALUE:
-                print("\n" + t("mode.enter_config"))
-                await self._config_mode(mode_stop_event)
-            else:
-                print("\n" + t("mode.enter_normal"))
-                await self._normal_mode(mode_stop_event)
-
+            current_mode = self._switch.value()
+            await self._run_mode(current_mode)
             await self.stop()
-            await asyncio.sleep(0.5)
+            await asyncio.sleep(1)
 
     async def stop(self) -> None:
         if self._ble and self._ble.is_connected():

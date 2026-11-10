@@ -9,14 +9,7 @@ from lib.i18n import t
 class WiFi:
     __instance: WiFi | None = None
 
-    _wifi: dict | None = None
     _wlan: network.WLAN | None = None
-    _hostname: str | None = None
-
-    def __init__(self):
-        config = Config.create()
-        self._wifi = config.get("wifi")
-        self._hostname = config.get("device", {}).get("name", "Rozumari")
 
     async def connect(self) -> bool:
         """
@@ -30,8 +23,9 @@ class WiFi:
         :param force: Force a reconnection sequence even if already connected. Defaults to False.
         :return: True if connection is successful, False otherwise.
         """
-        if self._wifi is None:
-            return False
+        config = Config.create()
+        wifi = config.get("wifi")
+        hostname = config.get("device", {}).get("name", "Rozumari")
 
         self._wlan = network.WLAN(network.STA_IF)
 
@@ -41,11 +35,10 @@ class WiFi:
         self._wlan.active(True)
         await asyncio.sleep(0.5)
 
-        if self._hostname:
-            network.hostname(self._hostname)
+        network.hostname(hostname)
 
-        ssid = self._wifi.get("ssid")
-        password = self._wifi.get("password")
+        ssid = wifi.get("ssid")
+        password = wifi.get("password")
         print(t("wifi.connecting", ssid=ssid), end="")
 
         timeout = 30

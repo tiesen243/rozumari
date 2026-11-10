@@ -1,3 +1,10 @@
+## @rozumari/api@0.2.3
+
+### Patch Changes
+
+- Added AI chatbot
+- Added Messager chatbot
+
 ## @rozumari/api@0.2.2
 
 ### Patch Changes

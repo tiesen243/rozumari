@@ -24,7 +24,7 @@ class Api:
         }
 
     async def _request(
-        self, method: str, endpoint: str, body_data: dict | None = None
+        self, method: str, endpoint: str, body: dict | None = None
     ) -> dict:
         url = f"{self._base_url}{endpoint}"
         proto, host, port, path = self._parse_url(url)
@@ -35,22 +35,24 @@ class Api:
             _ = gc.collect()
             reader, writer = await asyncio.open_connection(host, port, **ssl)
 
-            payload = json.dumps(body_data) if body_data else None
+            payload = json.dumps(body) if body is not None else None
+            payload_bytes = payload.encode("utf-8") if payload is not None else None
+
             req_lines = [
                 f"{method.upper()} {path} HTTP/1.1",
                 f"Host: {host}",
                 "Connection: close",
             ]
 
-            if payload:
-                req_lines.append(f"Content-Length: {len(payload)}")
+            if payload_bytes is not None:
+                req_lines.append(f"Content-Length: {len(payload_bytes)}")
 
             for key, val in self._base_headers.items():
                 req_lines.append(f"{key}: {val}")
 
             req_data = "\r\n".join(req_lines) + "\r\n\r\n"
-            if payload:
-                req_data += payload
+            if payload_bytes is not None:
+                req_data += payload_bytes.decode("utf-8")
 
             writer.write(req_data.encode("utf-8"))
             await writer.drain()
@@ -93,7 +95,7 @@ class Api:
         return await self._request("GET", endpoint)
 
     async def post(self, endpoint: str, data: dict | None = None) -> dict:
-        return await self._request("POST", endpoint, body_data=data)
+        return await self._request("POST", endpoint, body=data)
 
     async def stream(
         self,

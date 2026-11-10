@@ -44,7 +44,7 @@ function SaveDeviceFormSubmit({
   const { api } = useRuntime()
 
   const handleSubmit = updateDeviceForm.useSubmit(
-    (payload) => api.device['update'].mutateEffect({ params: { id }, payload }),
+    (payload) => api.device.update.mutateEffect({ params: { id }, payload }),
     {
       onSuccess: async () => {
         await queryClient.invalidateQueries({

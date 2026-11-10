@@ -7,6 +7,8 @@ import * as Context from 'effect/Context'
 import * as Effect from 'effect/Effect'
 import * as Layer from 'effect/Layer'
 
+import { buildNotificationPrompt } from '@/modules/ai/infrastructure/services/ai/instructions'
+import { postMessage } from '@/modules/ai/infrastructure/services/bot/shared'
 import { DeviceService } from '@/modules/device/application/ports/device.service'
 import { NotificationRepository } from '@/modules/notification/application/ports/notification.repository'
 import { Notification } from '@/modules/notification/domain/entities/notification.entity'
@@ -44,6 +46,11 @@ export class CreateNotificationUseCase extends Context.Service<
           deviceId,
         })
         yield* notificationRepository.save(notification)
+
+        yield* postMessage(
+          device.userId,
+          buildNotificationPrompt(notification)
+        ).pipe(Effect.ignore)
 
         return {
           id: notification.id,
