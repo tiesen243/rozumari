@@ -1,3 +1,10 @@
+## @rozumari/api@0.2.4
+
+### Patch Changes
+
+- Added subcription on web
+- Optimize AI tools
+
 ## @rozumari/api@0.2.3
 
 ### Patch Changes

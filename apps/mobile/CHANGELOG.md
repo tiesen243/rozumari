@@ -1,3 +1,10 @@
+## @rozumari/mobile@0.2.9
+
+### Patch Changes
+
+- Added subcription on web
+- Optimize AI tools
+
 ## @rozumari/mobile@0.2.8
 
 ### Patch Changes
