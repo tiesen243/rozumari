@@ -178,39 +178,53 @@ You are responsible for formatting Rozumari notification data into a clear and u
 
 Follow all rules defined in the system instructions. This prompt only defines notification-specific business logic.
 
-## 1. Medication dispensing mode
+## 1. Output language
+
+Determine the output language based on the notification content, prioritizing:
+
+1. Payload values and text.
+2. Notification title.
+3. Notification body.
+
+Rules:
+- If the notification content is in English, generate the entire notification in English.
+- If the notification content is in Vietnamese, generate the entire notification in Vietnamese with proper diacritics.
+- If the content contains multiple languages, use the dominant language.
+- If the language cannot be determined, default to Vietnamese with proper diacritics.
+- Keep medication names, proper nouns, IDs, error codes, and technical values unchanged.
+- Do not mix languages unnecessarily.
+
+## 2. Medication dispensing mode
 
 Determine the dispensing mode using scheduleId:
 
 - If scheduleId is null:
-  The medication dispensing operation was triggered manually by the caregiver by pressing the dispense button in the mobile application.
-  Describe it as: "Cấp thuốc thủ công (thực hiện từ ứng dụng)".
-  Never describe this as a missing schedule, an unconfigured schedule, or a schedule error.
+  The medication dispensing operation was triggered manually by the caregiver pressing the dispense button in the mobile application.
+  Describe it as a manual dispensing operation initiated from the application.
+  Never interpret this as a missing schedule, an unconfigured schedule, or a schedule error.
 
 - If scheduleId has a value:
   The operation was triggered by a medication schedule configured in Rozumari.
-  Describe it as: "Cấp thuốc theo lịch trình đã cài đặt".
+  Describe it as dispensing according to the configured schedule.
   Include the Schedule ID when relevant.
 
 Never display null values.
 
-## 2. Payload interpretation
+## 3. Payload interpretation
 
-Translate technical payload fields into natural Vietnamese. Do not display raw JSON property names when their meanings are known.
+Translate technical payload fields into natural language using the selected output language. Do not display raw JSON property names when their meanings are known.
 
 ### required_failures
 
 The number of required medications that were not dispensed in the requested quantity.
 
-When greater than zero, explain it as:
-"Có {value} thuốc bắt buộc chưa được cấp đủ."
+When greater than zero, explain that the specified number of required medications were not dispensed in the requested quantity.
 
 ### optional_failures
 
 The number of optional medications that were not dispensed in the requested quantity.
 
-When greater than zero, explain it as:
-"Có {value} thuốc không bắt buộc chưa được cấp đủ."
+When greater than zero, explain that the specified number of optional medications were not dispensed in the requested quantity.
 
 Always distinguish required medications from optional medications.
 
@@ -219,15 +233,10 @@ Always distinguish required medications from optional medications.
 Common fields include:
 
 - slot: Medication compartment location.
-  Example: "Vị trí ngăn chứa: 0-0".
-- medicine: Medication name.
-  Preserve the original name.
-- quantity: Medication quantity associated with the operation.
-  Only include a unit if it is explicitly provided or reliably established.
-- errorCode: Technical error code.
-  Preserve the original value.
+- medicine: Medication name. Preserve the original name.
+- quantity: Medication quantity associated with the operation. Only include a unit if it is explicitly provided or reliably established.
+- errorCode: Technical error code. Preserve the original value.
 - retryCount: Number of attempts.
-  Display as "Số lần thử".
 
 For other fields:
 - Translate the field name if its meaning is clear.
@@ -237,7 +246,7 @@ For other fields:
 - Explain required_failures and optional_failures before listing individual medication details.
 - If payload is null or empty, omit the details section.
 
-## 3. Notification severity
+## 4. Notification severity
 
 Use the notification level to select the appropriate emoji:
 
@@ -247,21 +256,23 @@ Use the notification level to select the appropriate emoji:
 
 Do not exaggerate the severity or infer consequences that are not supported by the data.
 
-## 4. Message composition
+## 5. Message composition
 
 Create a concise message using this structure when applicable:
 
-[Severity emoji] [Vietnamese notification title]
+[Severity emoji] [Notification title]
 
 [A short explanation of the event or error.]
 
-Hình thức cấp thuốc: [Dispensing mode]
+[Dispensing mode description]
 
-Chi tiết:
+Details:
 • [Human-readable payload information]
 
-Thiết bị: [Device ID]
-Lịch trình: [Schedule ID, only when available]
+Device: [Device ID]
+Schedule: [Schedule ID, only when available]
+
+Translate all labels and descriptions into the selected output language.
 
 You may adjust the structure to avoid repetition and improve readability.
 
