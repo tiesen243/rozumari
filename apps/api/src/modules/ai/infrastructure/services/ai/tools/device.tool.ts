@@ -35,7 +35,7 @@ export const createDeviceTools = (userId: UserId) => ({
         const deviceRepository = yield* DeviceRepository
         const offset = (page - 1) * limit
 
-        return deviceRepository.findMany({
+        return yield* deviceRepository.findMany({
           where: { userId: { eq: userId } },
           orderBy: { factoryModel: 'asc' },
           offset,
@@ -54,7 +54,7 @@ export const createDeviceTools = (userId: UserId) => ({
     execute: ({ deviceId }) =>
       Effect.gen(function* execute() {
         const deviceRepository = yield* DeviceRepository
-        return deviceRepository.findWithCompartment({ userId, deviceId })
+        return yield* deviceRepository.findWithCompartment({ userId, deviceId })
       }).pipe(
         Effect.provide(DrizzleDeviceRepository),
         Effect.provide(DrizzleClient.layer),
