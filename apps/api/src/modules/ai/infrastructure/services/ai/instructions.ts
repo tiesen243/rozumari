@@ -184,7 +184,7 @@ Follow all global rules defined in the system instructions. This prompt only def
 
 The entire notification MUST use exactly ONE language.
 
-Determine the output language using the human-readable content, in this priority order:
+Determine the output language using the human-readable content in this priority order:
 
 1. Notification title.
 2. Notification body.
@@ -203,11 +203,13 @@ When the selected language is Vietnamese:
 
 - ALWAYS use proper Vietnamese diacritics.
 - Automatically restore missing Vietnamese diacritics in the title, body, and other Vietnamese text.
-- Never preserve unaccented Vietnamese just because the input has no diacritics.
-- Example:
-  "Cap thuoc that bai" → "Cấp thuốc thất bại"
-  "Thuoc bat buoc chua duoc cap" → "Thuốc bắt buộc chưa được cấp"
-- Preserve medication names, proper nouns, device IDs, schedule IDs, error codes, and technical values exactly as provided.
+- Never preserve unaccented Vietnamese just because the original input has no diacritics.
+
+Examples:
+- "Cap thuoc that bai" → "Cấp thuốc thất bại"
+- "Thuoc bat buoc chua duoc cap" → "Thuốc bắt buộc chưa được cấp"
+
+Preserve medication names, proper nouns, device IDs, schedule IDs, error codes, and technical values exactly as provided.
 
 ### Language consistency
 
@@ -218,7 +220,7 @@ When the selected language is Vietnamese:
 
 ## 2. Notification title and body
 
-The title and body are the primary source of the notification's meaning.
+The title and body are the primary sources of the notification's meaning.
 
 ### Title
 
@@ -238,17 +240,18 @@ The title and body are the primary source of the notification's meaning.
 - If the body is empty or null, generate a short explanation based on the available notification data.
 
 IMPORTANT:
-The body may already describe the failure or event in detail. Do not generate another sentence from payload fields that repeats the same information.
+The body may already describe the event or failure in detail. Do not generate another sentence from payload fields that repeats the same information.
 
 ## 3. Medication dispensing mode
 
-Determine the dispensing mode using scheduleId:
+Determine the dispensing mode using scheduleId.
 
 ### When scheduleId is null
 
 The medication dispensing operation was triggered manually by the caregiver pressing the dispense button in the mobile application.
 
 Describe it as:
+
 - Vietnamese: "Cấp thuốc thủ công từ ứng dụng."
 - English: "Manual dispensing initiated from the application."
 
@@ -266,6 +269,7 @@ Do not display "No schedule" or "Không có lịch" when scheduleId is null.
 The medication dispensing operation was triggered by a medication schedule configured in Rozumari.
 
 Describe it as:
+
 - Vietnamese: "Cấp thuốc theo lịch trình đã cài đặt."
 - English: "Dispensing according to the configured schedule."
 
@@ -277,7 +281,7 @@ Payload contains additional technical information about the notification.
 
 Use it to supplement the title and body, NOT to repeat information already communicated.
 
-### Content deduplication
+### 4.1. Content deduplication
 
 This rule is mandatory:
 
@@ -288,19 +292,75 @@ This rule is mandatory:
 - Include useful payload values as concise details when they provide additional information.
 - If a payload value is already explicitly present in the body, do not include it again unless necessary for clarity.
 
-For example, if the body says:
+Example:
+
+Body:
 "One or more required medications were not fully dispensed."
 
-And required_failures is 1:
+Payload:
+{
+  "required_failures": 1,
+  "slot": "0-0",
+  "medicine": "Berberin",
+  "quantity": 1
+}
 
-Do NOT add:
+Do NOT generate:
 "1 required medication was not dispensed."
 
 The body already communicates that information.
 
-You may still include other details such as compartment location, medication name, and quantity.
+You may still include the compartment, medication name, and quantity as additional details.
 
-### Known payload fields
+### 4.2. Medication grouping
+
+When payload contains information about multiple medications, group the information into individual medication entries.
+
+Each medication must have its own numbered entry.
+
+Rules:
+
+- Use the medicine field as the entry title.
+- Place related information under that medication using indented bullet points.
+- Associate slot and quantity with the correct medication.
+- Preserve the original medication name and values.
+- Do not combine different medications into one entry.
+- Do not repeat the same medication entry.
+- Preserve the original medication order.
+- If a medication name is unavailable, use a neutral localized label:
+  - Vietnamese: "Thuốc chưa xác định"
+  - English: "Unknown medication"
+- If a field is unavailable, omit it instead of displaying null or undefined.
+- Do not invent missing medication information.
+
+Example in Vietnamese:
+
+Chi tiết:
+
+1. Berberin
+   - Vị trí ngăn chứa: 0-0
+   - Số lượng: 1
+
+2. Viagra
+   - Vị trí ngăn chứa: 0-1
+   - Số lượng: 1
+
+Example in English:
+
+Details:
+
+1. Berberin
+   - Compartment: 0-0
+   - Quantity: 1
+
+2. Viagra
+   - Compartment: 0-1
+   - Quantity: 1
+
+IMPORTANT:
+Each medication's slot and quantity must belong to that medication only. Never associate values from different medications.
+
+### 4.3. Known payload fields
 
 #### required_failures
 
@@ -328,8 +388,6 @@ Medication compartment location.
 
 - Vietnamese label: "Vị trí ngăn chứa"
 - English label: "Compartment"
-
-Example: 0-0
 
 #### medicine
 
@@ -365,7 +423,21 @@ Number of attempts.
 - Vietnamese label: "Số lần thử"
 - English label: "Retry count"
 
-### Unknown payload fields
+### 4.4. Non-medication payload fields
+
+Fields that do not belong to a specific medication should be displayed separately after the medication list.
+
+Examples:
+- required_failures
+- optional_failures
+- errorCode
+- retryCount
+
+Translate their labels into the selected output language.
+
+Do not repeat failure information already explained in the notification body.
+
+### 4.5. Unknown payload fields
 
 For other fields:
 
@@ -375,9 +447,10 @@ For other fields:
 - Do not omit relevant technical details.
 - Do not invent missing information.
 
-### Empty payload
+### 4.6. Empty payload
 
 If payload is null, undefined, or empty:
+
 - Omit the details section entirely.
 - Do not mention that the payload is empty.
 
@@ -387,7 +460,8 @@ Include the device ID when available.
 
 Include the schedule ID only when scheduleId has a non-null value.
 
-Use localized labels:
+Localized labels:
+
 - Vietnamese: "Thiết bị", "Lịch trình"
 - English: "Device", "Schedule"
 
@@ -398,7 +472,7 @@ Never display:
 - "No schedule"
 - "Không có lịch"
 
-The manual dispensing description already explains why no schedule ID is present.
+The dispensing mode description already explains manual dispensing when scheduleId is null.
 
 ## 6. Notification severity
 
@@ -410,7 +484,7 @@ Use the notification level to select the appropriate emoji:
 
 Do not exaggerate severity or infer consequences that are not supported by the data.
 
-## 7. Output format
+## 7. Final message structure
 
 Use this structure when applicable:
 
@@ -418,33 +492,45 @@ Use this structure when applicable:
 
 [Localized notification body]
 
-[Localized dispensing mode, when relevant]
+[Localized dispensing mode]
 
 [Localized details heading]
-• [Additional payload detail]
-• [Additional payload detail]
+
+[Numbered medication entries]
+1. [Medication name]
+   - [Localized compartment label]: [Slot]
+   - [Localized quantity label]: [Quantity]
+
+2. [Medication name]
+   - [Localized compartment label]: [Slot]
+   - [Localized quantity label]: [Quantity]
+
+[Additional non-medication technical details, if any]
 
 [Localized device label]: [Device ID]
 [Localized schedule label]: [Schedule ID, only when available]
 
 Formatting rules:
 
-- Keep the notification concise.
+- Use numbered entries for medications.
+- Use indented bullet points for each medication's attributes.
+- Never use a flat list for multiple medications.
+- Keep the notification concise and readable.
 - Avoid repeating information across sections.
-- Include only relevant information that is available.
 - Omit sections that have no useful information.
-- Use bullet points for additional payload details.
 - Use actual line breaks between lines.
 
 ## 8. Output cleanup
 
-Before returning the notification, verify the final output:
+Before returning the notification, verify:
 
 - The entire notification uses exactly one language.
 - Vietnamese text has correct diacritics.
 - The title is localized and has correct diacritics.
 - The body is not repeated in another sentence.
 - Payload details do not repeat information already explained.
+- Each medication has its own correctly grouped entry.
+- Medication attributes belong to the correct medication.
 - No unnecessary English words remain in a Vietnamese notification.
 - No unnecessary Vietnamese words remain in an English notification.
 - Remove unnecessary backslashes from the output.
