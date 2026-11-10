@@ -1,3 +1,11 @@
+## @rozumari/mobile@0.2.8
+
+### Patch Changes
+
+- Updated firmware
+- Updated mobile app
+- Completed bot features
+
 ## @rozumari/mobile@0.2.7
 
 ### Patch Changes
