@@ -9,6 +9,7 @@ import * as Effect from 'effect/Effect'
 import * as Layer from 'effect/Layer'
 
 import { DeviceRepository } from '@/modules/device/application/ports/device.repository'
+import { StreamService } from '@/shared/application/services/stream.service'
 
 export class UpdateDeviceUseCase extends Context.Service<
   UpdateDeviceUseCase,
@@ -24,6 +25,7 @@ export class UpdateDeviceUseCase extends Context.Service<
 >()('device/application/UpdateDeviceUseCase', {
   make: Effect.gen(function* make() {
     const deviceRepository = yield* DeviceRepository
+    const streamService = yield* StreamService
 
     return {
       execute: Effect.fn(function* execute({ id, ...input }) {
@@ -48,6 +50,10 @@ export class UpdateDeviceUseCase extends Context.Service<
           position: input.position ?? device.position,
         })
         yield* deviceRepository.save(updatedDevice)
+        yield* streamService.publish(
+          updatedDevice.id,
+          JSON.stringify({ action: 'sync_info', payload: {} })
+        )
 
         return {
           id: updatedDevice.id,

@@ -22,6 +22,12 @@ export const postMessage = Effect.fn(function* postMessage(
     .pipe(Effect.orDie)
   if (!thread) return
 
-  yield* Effect.promise(() => bot.initialize())
-  yield* Effect.promise(() => bot.thread(thread.threadId).post(message))
+  yield* Effect.tryPromise({
+    try: () => bot.initialize(),
+    catch: () => Effect.ignore,
+  })
+  yield* Effect.tryPromise({
+    try: () => bot.thread(thread.threadId).post(message),
+    catch: () => Effect.ignore,
+  })
 })
