@@ -16,6 +16,7 @@ from tasks.streaming import Streaming
 from tasks.sync_schedule import SyncSchedule
 
 CONFIG_MODE_VALUE = 0
+SWITCH_DEBOUNCE = 0.01
 
 
 class Bootstrap:
@@ -30,11 +31,16 @@ class Bootstrap:
     _link: Link
 
     _switch: Pin
+    _switch_flag: asyncio.ThreadSafeFlag
 
     def __init__(self) -> None:
         pins = Pins.create()
         self._switch = pins.switch
 
+        # Thread-safe signal for GPIO interrupt.
+        self._switch_flag = asyncio.ThreadSafeFlag()
+
+        # Initialize services.
         self._wifi = WiFi.create()
         self._streaming = Streaming.create()
         self._schedules = Schedules.create()
@@ -43,51 +49,102 @@ class Bootstrap:
         self._display = Display.create()
         self._link = Link.create()
 
-        self._display.show_boot_logo()
+        # Register GPIO interrupt.
+        self._switch.irq(
+            handler=self._on_switch_changed,
+            trigger=Pin.IRQ_RISING | Pin.IRQ_FALLING,
+        )
+
+    # ---------------------------------------------------------
+    # SWITCH INTERRUPT
+    # ---------------------------------------------------------
+
+    def _on_switch_changed(self, pin: Pin) -> None:
+        """GPIO interrupt callback."""
+        self._switch_flag.set()
+
+    async def _watch_switch(
+        self,
+        current_mode: int,
+        mode_task: asyncio.Task,
+    ) -> None:
+        """Wait for a physical switch change and interrupt current mode."""
+
+        while not mode_task.done():
+            await self._switch_flag.wait()
+
+            # Debounce.
+            await asyncio.sleep(SWITCH_DEBOUNCE)
+
+            new_mode = self._switch.value()
+
+            # Ignore bouncing.
+            if new_mode == current_mode:
+                continue
+
+            if new_mode == CONFIG_MODE_VALUE:
+                print(t("normal.switch_triggered"))
+            else:
+                print(t("config.stopped"))
+
+            print("Switch changed. Interrupting current mode...")
+
+            mode_task.cancel()
+            return
+
+    # ---------------------------------------------------------
+    # CONFIG MODE
+    # ---------------------------------------------------------
 
     async def _config_mode(self, stop_event: asyncio.Event) -> None:
-        """Run Config Mode (BLE) until the mode switch is released."""
-        self._ble = BLE.create()
-        self._display.show_config_mode()
-
-        if not self._ble.is_ready():
-            self._ble.activate()
-
-        if self._ble.is_connected():
-            self._ble.disconnect()
-
-        self._ble.start_advertising()
-        print(t("config.started"))
-
         try:
-            while self._switch.value() == CONFIG_MODE_VALUE and not stop_event.is_set():
-                await asyncio.sleep(0.2)
+            self._ble = BLE.create()
+            self._display.show_config_mode()
+
+            if not self._ble.is_ready():
+                self._ble.activate()
+
+            if self._ble.is_connected():
+                self._ble.disconnect()
+
+            self._ble.start_advertising()
+            print(t("config.started"))
+
+            # Wait until mode is interrupted.
+            await stop_event.wait()
+
+        except asyncio.CancelledError:
+            raise
+
         except Exception as e:
             print(t("config.error", error=e))
+
         finally:
             if self._ble:
                 self._ble.stop()
+
             print(t("config.stopped"))
 
-    async def _watch_switch_in_normal(self, stop_event: asyncio.Event) -> None:
-        """Monitor the switch during Normal Mode and signal stop_event when toggled to Config Mode."""
-        while not stop_event.is_set():
-            if self._switch.value() == CONFIG_MODE_VALUE:
-                print(t("normal.switch_triggered"))
-                stop_event.set()
-                break
-            await asyncio.sleep(0.3)
+    # ---------------------------------------------------------
+    # NORMAL MODE
+    # ---------------------------------------------------------
 
     async def _normal_mode(self, stop_event: asyncio.Event) -> None:
-        """Run Normal Mode (WiFi, Sync, Tasks) and terminate cleanly when stop_event is set."""
+        self._display.show_boot_logo()
+
         _ = Config.create(force=True)
 
         retry_count, max_retries, is_connected = 0, 3, False
+
+        # Connect WiFi.
         while retry_count < max_retries and not stop_event.is_set():
             is_connected = await self._wifi.connect()
+
             if is_connected:
                 break
+
             retry_count += 1
+
             print(
                 t(
                     "setup.wifi_failed_attempt",
@@ -95,6 +152,7 @@ class Bootstrap:
                     max_retries=max_retries,
                 )
             )
+
             self._wifi.reset()
             await asyncio.sleep(2)
 
@@ -105,15 +163,20 @@ class Bootstrap:
             print(t("setup.wifi_failed_max"))
             return
 
+        # Synchronize time.
         print(t("setup.syncing_time"))
+
         retry_count, max_retries = 0, 3
+
         while is_connected and retry_count < max_retries and not stop_event.is_set():
             try:
                 ntptime.settime()
                 print(t("setup.time_synced"))
                 break
+
             except Exception as e:
                 retry_count += 1
+
                 print(
                     t(
                         "setup.time_sync_failed",
@@ -122,75 +185,155 @@ class Bootstrap:
                         error=e,
                     )
                 )
+
                 await asyncio.sleep(2)
 
         if stop_event.is_set():
             return
 
+        # Synchronize device information.
         print(t("setup.syncing_device"))
         _ = await self._sync_info.execute()
 
+        if stop_event.is_set():
+            return
+
+        # Synchronize schedules.
         print(t("setup.syncing_schedules"))
         _ = await self._sync_schedule.execute()
 
+        if stop_event.is_set():
+            return
+
         print(t("normal.setup_complete"))
 
+        # Background tasks.
         tasks = [
             asyncio.create_task(self._display.start()),
             asyncio.create_task(self._link.start()),
             asyncio.create_task(self._sync_schedule.start()),
             asyncio.create_task(self._streaming.start()),
             asyncio.create_task(self._schedules.start()),
-            asyncio.create_task(self._watch_switch_in_normal(stop_event)),
         ]
 
         try:
             while not stop_event.is_set():
                 await asyncio.sleep(0.5)
+
         finally:
             print(t("normal.cleaning"))
+
             for task in tasks:
                 task.cancel()
-            await asyncio.gather(*tasks, return_exceptions=True)
+
+            await asyncio.gather(
+                *tasks,
+                return_exceptions=True,
+            )
+
             print(t("normal.stopped"))
 
-    async def start(self) -> None:
-        """Main loop managing seamless soft transitions between Config Mode and Normal Mode."""
-        while True:
-            mode_stop_event = asyncio.Event()
+    # ---------------------------------------------------------
+    # MODE MANAGER
+    # ---------------------------------------------------------
 
-            if self._switch.value() == CONFIG_MODE_VALUE:
-                print("\n" + t("mode.enter_config"))
-                await self._config_mode(mode_stop_event)
-            else:
-                print("\n" + t("mode.enter_normal"))
-                await self._normal_mode(mode_stop_event)
+    async def _run_mode(self, mode: int) -> None:
+        """Run current mode and interrupt it when switch changes."""
+
+        stop_event = asyncio.Event()
+
+        if mode == CONFIG_MODE_VALUE:
+            mode_name = "CONFIG"
+            mode_coro = self._config_mode(stop_event)
+        else:
+            mode_name = "NORMAL"
+            mode_coro = self._normal_mode(stop_event)
+
+        print(
+            "\n"
+            + (
+                t("mode.enter_config")
+                if mode == CONFIG_MODE_VALUE
+                else t("mode.enter_normal")
+            )
+        )
+
+        mode_task = asyncio.create_task(mode_coro)
+
+        switch_task = asyncio.create_task(self._watch_switch(mode, mode_task))
+
+        try:
+            await mode_task
+
+        except asyncio.CancelledError:
+            print(f"{mode_name} MODE interrupted")
+
+        except Exception as error:
+            print(t("error.unexpected", error=error))
+
+        finally:
+            stop_event.set()
+
+            switch_task.cancel()
+
+            await asyncio.gather(
+                switch_task,
+                return_exceptions=True,
+            )
 
             await self.stop()
-            await asyncio.sleep(0.5)
+
+    # ---------------------------------------------------------
+    # MAIN LOOP
+    # ---------------------------------------------------------
+
+    async def start(self) -> None:
+        """Main loop managing mode transitions."""
+
+        while True:
+            current_mode = self._switch.value()
+
+            await self._run_mode(current_mode)
+
+            await asyncio.sleep(0.1)
+
+    # ---------------------------------------------------------
+    # CLEANUP
+    # ---------------------------------------------------------
 
     async def stop(self) -> None:
-        if self._ble and self._ble.is_connected():
-            self._ble.stop()
-        if self._wifi:
-            self._wifi.disconnect()
+        try:
+            if self._ble:
+                self._ble.stop()
 
-        await self._display.stop()
-        await self._link.stop()
-        await self._sync_schedule.stop()
-        await self._streaming.stop()
-        await self._schedules.stop()
+            if self._wifi:
+                self._wifi.disconnect()
 
+            await self._display.stop()
+            await self._link.stop()
+            await self._sync_schedule.stop()
+            await self._streaming.stop()
+            await self._schedules.stop()
+        except:  # noqa: E722
+            pass
+
+
+# -------------------------------------------------------------
+# ENTRY POINT
+# -------------------------------------------------------------
 
 if __name__ == "__main__":
     bootstrap = Bootstrap()
 
     try:
         asyncio.run(bootstrap.start())
+
     except KeyboardInterrupt:
         print(t("cleanup.interrupted"))
+
     except Exception as error:
         print(t("error.unexpected", error=error))
+
     finally:
         asyncio.run(bootstrap.stop())
         print(t("cleanup.stopped"))
