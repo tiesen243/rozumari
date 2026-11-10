@@ -54,7 +54,7 @@ class BLE:
         if not self._ble or self._config is None:
             return
 
-        name = self._config.get("name", "Rozumari")
+        name = self._config.get("name", "Rozumari") or "Rozumari"
         name = name.strip()[:8]
 
         payload = bytearray([0x02, 0x01, 0x06])

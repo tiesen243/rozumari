@@ -86,6 +86,9 @@ class Streaming:
             await asyncio.sleep(0.5)
             await self._sync_info.execute()
 
+            await asyncio.sleep(0.5)
+            self._display.refresh_device_info()
+
         elif action == "sync_schedule":
             print(t("stream.sync_schedule"))
             await self._api.post(

@@ -7,34 +7,11 @@ import * as Context from 'effect/Context'
 import * as Effect from 'effect/Effect'
 import * as Layer from 'effect/Layer'
 
+import { buildNotificationPrompt } from '@/modules/ai/infrastructure/services/ai/instructions'
 import { postMessage } from '@/modules/ai/infrastructure/services/bot/shared'
 import { DeviceService } from '@/modules/device/application/ports/device.service'
 import { NotificationRepository } from '@/modules/notification/application/ports/notification.repository'
 import { Notification } from '@/modules/notification/domain/entities/notification.entity'
-
-const formatNotificationMessage = (notification: Notification) => {
-  const level = {
-    error: '🔴 Error',
-    warning: '🟡 Warning',
-    info: '🔵 Info',
-  }[notification.level]
-
-  const payload =
-    notification.payload && Object.keys(notification.payload).length > 0
-      ? `Details:\n\`\`\`json\n${JSON.stringify(notification.payload, null, 2)}\n\`\`\``
-      : null
-
-  return [
-    `${level}: ${notification.title}`,
-    '',
-    notification.body,
-    `Device ID: ${notification.deviceId}`,
-    notification.scheduleId ? `Schedule ID: ${notification.scheduleId}` : null,
-    payload,
-  ]
-    .filter(Boolean)
-    .join('\n')
-}
 
 export class CreateNotificationUseCase extends Context.Service<
   CreateNotificationUseCase,
@@ -72,7 +49,7 @@ export class CreateNotificationUseCase extends Context.Service<
 
         yield* postMessage(
           device.userId,
-          formatNotificationMessage(notification)
+          buildNotificationPrompt(notification)
         ).pipe(Effect.ignore)
 
         return {
