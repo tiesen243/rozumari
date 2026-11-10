@@ -14,7 +14,7 @@
     },
     "apps/api": {
       "name": "@rozumari/api",
-      "version": "0.2.4",
+      "version": "0.2.5",
       "bin": "./dist/cli.mjs",
       "dependencies": {
         "@chat-adapter/messenger": "^4.44.0",

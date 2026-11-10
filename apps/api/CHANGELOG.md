@@ -1,3 +1,9 @@
+## @rozumari/api@0.2.5
+
+### Bug Fixes
+
+- Missing yield in AI tools
+
 ## @rozumari/api@0.2.4
 
 ### Patch Changes
