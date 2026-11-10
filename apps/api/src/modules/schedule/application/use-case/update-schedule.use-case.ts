@@ -4,6 +4,7 @@ import type { ScheduleInvalid } from '@rozumari/contract/schedule/schemas/schedu
 import type { ScheduleId } from '@rozumari/contract/schedule/schemas/schedule.schema'
 import type * as DateTime from 'effect/DateTime'
 
+import { CurrentUser } from '@rozumari/contract/auth/middleware'
 import { ScheduleNotFound } from '@rozumari/contract/schedule/schemas/schedule.error'
 import * as Context from 'effect/Context'
 import * as Effect from 'effect/Effect'
@@ -29,7 +30,7 @@ export class UpdateScheduleUseCase extends Context.Service<
     ) => Effect.Effect<
       UpdateScheduleDto.Output,
       ScheduleNotFound | ScheduleInvalid | DeviceNotFound,
-      DateTime.CurrentTimeZone
+      CurrentUser | DateTime.CurrentTimeZone
     >
   }
 >()('schedule/application/UpdateScheduleUseCase', {
@@ -42,8 +43,13 @@ export class UpdateScheduleUseCase extends Context.Service<
     const getAndValidateSchedule = Effect.fn(function* getAndValidateSchedule(
       id: ScheduleId
     ) {
+      const { userId, userRole } = yield* CurrentUser
+
       const [found, [schedule]] = yield* Effect.all([
-        scheduleRepository.findWithItems(id),
+        scheduleRepository.findWithItems({
+          userId: userRole === 'user' ? userId : undefined,
+          scheduleId: id,
+        }),
         scheduleRepository.findMany({
           where: { id: { eq: id } },
           limit: 1,

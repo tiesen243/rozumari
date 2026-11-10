@@ -1,7 +1,12 @@
+import type { DeviceId } from '@rozumari/contract/device/schemas/device.schema'
+
 import { Tabs, TabsList, TabsTrigger } from '@rozumari/ui/components/tabs'
+import { toast } from '@rozumari/ui/components/toast'
+import { useSubscription } from '@tiesen/effect-tanstack-query/react'
 import { parseAsStringLiteral, useQueryState } from 'nuqs'
 
 import { createMetadata } from '@/lib/metadata'
+import { api } from '@/lib/runtime'
 import { DevicesShowPageSkeleton } from '@/routes/dashboard/pill-boxes/[id].skeleton'
 import { DeviceInfo } from '@/routes/dashboard/pill-boxes/_components/device-info'
 import { NotificationsTab } from '@/routes/dashboard/pill-boxes/_components/tabs/notifications'
@@ -17,8 +22,8 @@ export const meta: Route.MetaFunction = ({ params }) =>
     description: `View and manage pill box ${params.id} details, notifications, and schedules.`,
   })
 
-export default function DevicesShowPage() {
-  const { isLoading } = useDevice()
+export default function DevicesShowPage({ params }: Route.ComponentProps) {
+  const { isLoading, error } = useDevice()
   const [tab, setTab] = useQueryState(
     'tab',
     parseAsStringLiteral([
@@ -26,6 +31,26 @@ export default function DevicesShowPage() {
       'notifications',
       'schedules',
     ]).withDefault('overview')
+  )
+
+  useSubscription(
+    api.device.subscribe.subscriptionOptions(
+      { params: { id: params.id as DeviceId } },
+      {
+        enabled: !isLoading && error === null,
+        autoReconnect: '3 seconds',
+        keepAlive: { timeout: '35 seconds' },
+        onData: ({ action, payload }) => {
+          if (action === 'message' && typeof payload === 'object') {
+            const p = payload as { type: 'success' | 'error'; content: string }
+
+            if (p.type === 'success') toast.success(p.content)
+            else if (p.type === 'error') toast.error(p.content)
+          }
+        },
+        onError: (err) => toast.error(err.message),
+      }
+    )
   )
 
   if (isLoading) return <DevicesShowPageSkeleton />

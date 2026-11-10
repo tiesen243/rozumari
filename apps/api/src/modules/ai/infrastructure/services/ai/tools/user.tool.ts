@@ -20,7 +20,12 @@ export const createUserTools = (userId: UserId) => ({
         const { db } = yield* DrizzleClient
 
         const [user] = yield* db
-          .select()
+          .select({
+            id: users.id,
+            username: users.username,
+            email: users.email,
+            role: users.role,
+          })
           .from(users)
           .where(eq(users.id, userId))
 
