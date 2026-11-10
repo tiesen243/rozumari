@@ -12,6 +12,11 @@ _CHAR_RX_UUID = bluetooth.UUID("3d8cffcb-69d3-41d3-8f9e-fafed0bcce6b")
 _CHAR_TX_UUID = bluetooth.UUID("09cbb497-1c8a-4ad6-b196-3459c1820a1a")
 
 
+_IRQ_CENTRAL_CONNECT = 1
+_IRQ_CENTRAL_DISCONNECT = 2
+_IRQ_GATTS_WRITE = 3
+
+
 class BLE:
     __instance: BLE | None = None
 
@@ -54,7 +59,7 @@ class BLE:
         if not self._ble or self._config is None:
             return
 
-        name = self._config.get("name", "Rozumari")
+        name = self._config.get("name", "Rozumari") or "Rozumari"
         name = name.strip()[:8]
 
         payload = bytearray([0x02, 0x01, 0x06])
@@ -70,19 +75,19 @@ class BLE:
         print(t("ble.advertising", name=name, mac=mac))
 
     def _irq(self, event: int, data: tuple) -> None:
-        if event == 1:  # Connect
+        if event == _IRQ_CENTRAL_CONNECT:
             print(t("ble.connected"))
             self._conn_handle = data[0]
             self._rx_buffer = bytearray()
             _ = asyncio.create_task(self._handler.on_connect())
 
-        elif event == 2:  # Disconnect
+        elif event == _IRQ_CENTRAL_DISCONNECT:
             print(t("ble.disconnected"))
             self._conn_handle = None
             self._rx_buffer = bytearray()
             _ = asyncio.create_task(self._async_start_advertising())
 
-        elif event == 3:  # Write
+        elif event == _IRQ_GATTS_WRITE:
             if self._handle_rx is None:
                 return
 

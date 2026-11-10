@@ -78,6 +78,41 @@ class Display:
 
         self._draw_boot_logo()
 
+    def refresh_device_info(self) -> None:
+        """Refresh only device name and position on LCD."""
+
+        # Get the latest Config instance.
+        self._config = Config.create()
+
+        device = self._config.get("device", {}) or {}
+
+        device_name = device.get("name", "") or device.get("factoryModel", "")
+
+        device_position = device.get("position", "")
+
+        device_label = str(device_name)
+
+        if device_position:
+            device_label = f"{device_label} - {device_position}"
+
+        if self._dialog is not None or self._last_render != "main":
+            self._main_drawn = False
+            return
+
+        width, _ = self._lcd.size()
+
+        self._lcd.fill_rect(
+            (0, 41),
+            (width, 14),
+            self._lcd.BLACK,
+        )
+
+        self._lcd.text(
+            (4, 44),
+            device_label[:25],
+            self._lcd.GREEN,
+        )
+
     def show_result(
         self,
         success: bool,

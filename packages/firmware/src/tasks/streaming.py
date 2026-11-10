@@ -9,6 +9,7 @@ from lib.pins import Pins
 from lib.utils import get_current_time
 from services.display import Display
 from services.drop import Drop
+from services.sync_info import SyncInfo
 from tasks.sync_schedule import SyncSchedule
 
 
@@ -29,6 +30,7 @@ class Streaming:
         self._drop = Drop.create()
         self._display = Display.create()
         self._sync_schedule = SyncSchedule.create()
+        self._sync_info = SyncInfo.create()
 
         self._current_task = None
         self._connected = False
@@ -71,13 +73,35 @@ class Streaming:
             print(t("stream.led", payload=payload))
             self._led.value(int(payload))  # pyright: ignore[reportArgumentType]
 
+        elif action == "sync_info":
+            print(t("stream.sync_info"))
+            await self._api.post(
+                "/api/devices/emit",
+                data={
+                    "action": "message",
+                    "payload": {
+                        "type": "success",
+                        "content": t("stream.sync_info_received"),
+                    },
+                },
+            )
+
+            await asyncio.sleep(0.5)
+            await self._sync_info.execute()
+
+            await asyncio.sleep(0.5)
+            self._display.refresh_device_info()
+
         elif action == "sync_schedule":
             print(t("stream.sync_schedule"))
             await self._api.post(
                 "/api/devices/emit",
                 data={
                     "action": "message",
-                    "payload": t("stream.sync_schedule_received"),
+                    "payload": {
+                        "type": "success",
+                        "content": t("stream.sync_schedule_received"),
+                    },
                 },
             )
 
@@ -90,7 +114,10 @@ class Streaming:
                 "/api/devices/emit",
                 data={
                     "action": "message",
-                    "payload": t("stream.drop_received"),
+                    "payload": {
+                        "type": "success",
+                        "content": t("stream.drop_received"),
+                    },
                 },
             )
 

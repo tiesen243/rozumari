@@ -79,6 +79,8 @@
   "stream.received": "[Stream] Received streaming payload: {data}",
   "stream.request_error": "Error in streaming request to {url}: {error}",
   "stream.started": "[Stream] Streaming task initiated...",
+  "stream.sync_info": "[Stream] Syncing device info...",
+  "stream.sync_info_received": "Sync device info command received",
   "stream.sync_schedule": "[Stream] Syncing schedule...",
   "stream.sync_schedule_received": "Sync schedule command received",
 
