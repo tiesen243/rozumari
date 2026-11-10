@@ -21,14 +21,14 @@ export function PillBoxDetailsHeader({
   device,
 }: Readonly<{ device: ShowDeviceDto.Output }>) {
   const { t, i18n } = useTranslation(['common', 'pill-box'])
-  const status = STATUS_MAPPERS[device.status as keyof typeof STATUS_MAPPERS]
+  const status = STATUS_MAPPERS[device.status]
 
   return (
     <Card>
       <CardHeader className='flex-row items-center gap-2 border-b border-border pb-4'>
         <Icon name='Cpu' className='size-5 text-primary' />
         <CardTitle className='flex-1'>
-          {device?.name || t('pill-box:details.device.unnamed_device')}
+          {device?.name ?? t('pill-box:details.device.unnamed_device')}
         </CardTitle>
 
         <UpdateDeviceButton device={device} />
@@ -59,7 +59,7 @@ export function PillBoxDetailsHeader({
             {t('pill-box:details.device.position')}
           </Typography>
           <Typography className='text-sm font-medium'>
-            {device.position || t('pill-box:details.device.unknown_position')}
+            {device.position ?? t('pill-box:details.device.unknown_position')}
           </Typography>
         </View>
 

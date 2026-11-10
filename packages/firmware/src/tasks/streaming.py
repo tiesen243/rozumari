@@ -91,13 +91,14 @@ class Streaming:
 
         elif action == "sync_schedule":
             print(t("stream.sync_schedule"))
-            await self._api.post(
+            r = await self._api.post(
                 "/api/devices/emit",
                 data={
                     "action": "message",
                     "payload": t("stream.sync_schedule_received"),
                 },
             )
+            print(r)
 
             await asyncio.sleep(0.5)
             await self._sync_schedule.execute()
