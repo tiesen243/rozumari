@@ -79,7 +79,10 @@ class Streaming:
                 "/api/devices/emit",
                 data={
                     "action": "message",
-                    "payload": t("stream.sync_info_received"),
+                    "payload": {
+                        "type": "success",
+                        "content": t("stream.sync_info_received"),
+                    },
                 },
             )
 
@@ -91,14 +94,16 @@ class Streaming:
 
         elif action == "sync_schedule":
             print(t("stream.sync_schedule"))
-            r = await self._api.post(
+            await self._api.post(
                 "/api/devices/emit",
                 data={
                     "action": "message",
-                    "payload": t("stream.sync_schedule_received"),
+                    "payload": {
+                        "type": "success",
+                        "content": t("stream.sync_schedule_received"),
+                    },
                 },
             )
-            print(r)
 
             await asyncio.sleep(0.5)
             await self._sync_schedule.execute()
@@ -109,7 +114,10 @@ class Streaming:
                 "/api/devices/emit",
                 data={
                     "action": "message",
-                    "payload": t("stream.drop_received"),
+                    "payload": {
+                        "type": "success",
+                        "content": t("stream.drop_received"),
+                    },
                 },
             )
 
