@@ -54,7 +54,7 @@ export const DrizzleScheduleRepository = Layer.effect(
     return {
       ...schedulesRepo,
 
-      findMany: Effect.fn(function* findMany(options = {}) {
+      findMany: Effect.fn(function* findMany(opts = {}) {
         const query = db
           .select({
             id: schedules.id,
@@ -67,14 +67,14 @@ export const DrizzleScheduleRepository = Layer.effect(
           .from(schedules)
           .$dynamic()
 
-        const whereSql = yield* buildCriteria(schedules, options.where)
+        const whereSql = yield* buildCriteria(schedules, opts.where)
         if (whereSql) query.where(whereSql)
 
-        const orderBySql = yield* buildOrderBy(schedules, options.orderBy)
+        const orderBySql = yield* buildOrderBy(schedules, opts.orderBy)
         if (orderBySql.length > 0) query.orderBy(...orderBySql)
 
-        if (options.limit) query.limit(options.limit)
-        if (options.offset) query.offset(options.offset)
+        if (opts.limit) query.limit(opts.limit)
+        if (opts.offset) query.offset(opts.offset)
 
         return yield* query.pipe(
           Effect.map((rows) =>
@@ -84,7 +84,10 @@ export const DrizzleScheduleRepository = Layer.effect(
         )
       }),
 
-      findWithItems: Effect.fn(function* findWithItems(scheduleId) {
+      findWithItems: Effect.fn(function* findWithItems(opts) {
+        const whereClauses = [eq(schedules.id, opts.scheduleId)]
+        if (opts.userId) whereClauses.push(eq(schedules.userId, opts.userId))
+
         const [row] = yield* db
           .select(selector)
           .from(schedules)
@@ -97,7 +100,7 @@ export const DrizzleScheduleRepository = Layer.effect(
               eq(compartments.position, scheduleItems.slot)
             )
           )
-          .where(eq(schedules.id, scheduleId))
+          .where(and(...whereClauses))
           .groupBy(schedules.id, devices.id)
           .orderBy(asc(schedules.date), asc(schedules.time))
           .pipe(Effect.orDie)

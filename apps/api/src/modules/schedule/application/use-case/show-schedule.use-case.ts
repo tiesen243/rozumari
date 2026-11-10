@@ -1,5 +1,6 @@
 import type { ShowScheduleDto } from '@rozumari/contract/schedule/dto/show-schedule.dto'
 
+import { CurrentUser } from '@rozumari/contract/auth/middleware'
 import { ScheduleNotFound } from '@rozumari/contract/schedule/schemas/schedule.error'
 import * as Context from 'effect/Context'
 import * as Effect from 'effect/Effect'
@@ -12,7 +13,7 @@ export class ShowScheduleUseCase extends Context.Service<
   {
     readonly execute: (
       input: ShowScheduleDto.Input
-    ) => Effect.Effect<ShowScheduleDto.Output, ScheduleNotFound>
+    ) => Effect.Effect<ShowScheduleDto.Output, ScheduleNotFound, CurrentUser>
   }
 >()('schedule/application/ShowScheduleUseCase', {
   make: Effect.gen(function* make() {
@@ -20,7 +21,11 @@ export class ShowScheduleUseCase extends Context.Service<
 
     return {
       execute: Effect.fn(function* execute({ id }) {
-        const result = yield* scheduleRepository.findWithItems(id)
+        const { userId, userRole } = yield* CurrentUser
+        const result = yield* scheduleRepository.findWithItems({
+          userId: userRole === 'user' ? userId : undefined,
+          scheduleId: id,
+        })
         if (!result)
           return yield* Effect.fail(new ScheduleNotFound({ error: { id } }))
 

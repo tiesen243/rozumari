@@ -20,7 +20,7 @@ export default function TabsPillBoxesDetailsScreen() {
   const { t } = useTranslation('pill-box')
   const { api } = useRuntime()
 
-  const { data, isLoading, refetch, isRefetching } = useQuery(
+  const { data, isLoading, error, refetch, isRefetching } = useQuery(
     api.device.show.queryOptions({ params: { id } })
   )
 
@@ -28,6 +28,7 @@ export default function TabsPillBoxesDetailsScreen() {
     api.device.subscribe.subscriptionOptions(
       { params: { id } },
       {
+        enabled: !isLoading && error === null,
         autoReconnect: '3 seconds',
         keepAlive: { timeout: '35 seconds' },
         onData: ({ action, payload }) => {
@@ -38,7 +39,7 @@ export default function TabsPillBoxesDetailsScreen() {
             else if (p.type === 'error') toast.error(p.content)
           }
         },
-        onError: (error) => toast.error(error.message),
+        onError: (err) => toast.error(err.message),
       }
     )
   )

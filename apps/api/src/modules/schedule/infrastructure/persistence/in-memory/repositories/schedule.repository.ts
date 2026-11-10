@@ -74,9 +74,12 @@ export const InMemoryScheduleRepository = Layer.effect(
     return {
       ...schedulesRepo,
 
-      findWithItems: Effect.fn(function* findWithItems(scheduleId) {
+      findWithItems: Effect.fn(function* findWithItems(opts) {
         const [schedule] = yield* schedulesRepo.findMany({
-          where: { id: { eq: scheduleId } },
+          where: {
+            id: { eq: opts.scheduleId },
+            ...(opts.userId && { userId: { eq: opts.userId } }),
+          },
           limit: 1,
         })
         if (!schedule) return null

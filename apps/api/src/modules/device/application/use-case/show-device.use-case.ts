@@ -13,7 +13,7 @@ export class ShowDeviceUseCase extends Context.Service<
   {
     readonly execute: (
       input: ShowDeviceDto.Input
-    ) => Effect.Effect<ShowDeviceDto.Output, DeviceNotFound>
+    ) => Effect.Effect<ShowDeviceDto.Output, DeviceNotFound, CurrentUser>
   }
 >()('device/application/ShowDeviceUseCase', {
   make: Effect.gen(function* make() {
@@ -21,17 +21,13 @@ export class ShowDeviceUseCase extends Context.Service<
 
     return {
       execute: Effect.fn(function* execute({ id }) {
-        const CurrentUserOpts = yield* Effect.serviceOption(CurrentUser)
+        const { userId, userRole } = yield* CurrentUser
 
-        const agg = yield* deviceRepository.findWithCompartment(id)
+        const agg = yield* deviceRepository.findWithCompartment({
+          userId: userRole === 'user' ? userId : undefined,
+          deviceId: id,
+        })
         if (!agg)
-          return yield* Effect.fail(new DeviceNotFound({ error: { id } }))
-
-        if (
-          CurrentUserOpts._tag === 'Some' &&
-          CurrentUserOpts.value.userRole !== 'admin' &&
-          agg.device.userId !== CurrentUserOpts.value.userId
-        )
           return yield* Effect.fail(new DeviceNotFound({ error: { id } }))
 
         const { device, compartments } = agg

@@ -1,6 +1,7 @@
 import type { DeviceNotFound } from '@rozumari/contract/device/schemas/device.error'
 import type { UpdateScheduleDto } from '@rozumari/contract/schedule/dto/update-schedule.dto'
 
+import { CurrentUser } from '@rozumari/contract/auth/middleware'
 import {
   ScheduleInvalid,
   ScheduleNotFound,
@@ -24,7 +25,8 @@ export class UpdateScheduleStatusUseCase extends Context.Service<
       input: UpdateScheduleDto.Params & Pick<UpdateScheduleDto.Input, 'status'>
     ) => Effect.Effect<
       void,
-      ScheduleNotFound | ScheduleInvalid | DeviceNotFound
+      ScheduleNotFound | ScheduleInvalid | DeviceNotFound,
+      CurrentUser
     >
   }
 >()('schedule/application/UpdateScheduleStatusUseCase', {
@@ -39,7 +41,11 @@ export class UpdateScheduleStatusUseCase extends Context.Service<
             new ScheduleInvalid({ message: 'Cannot set status to pending' })
           )
 
-        const schedule = yield* scheduleRepository.findWithItems(id)
+        const { userId, userRole } = yield* CurrentUser
+        const schedule = yield* scheduleRepository.findWithItems({
+          userId: userRole === 'user' ? userId : undefined,
+          scheduleId: id,
+        })
         if (!schedule)
           return yield* Effect.fail(new ScheduleNotFound({ error: { id } }))
 
