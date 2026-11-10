@@ -40,7 +40,7 @@ export const createScheduleTools = (userId: UserId) => ({
     execute: ({ deviceId, startDate, endDate }) =>
       Effect.gen(function* execute() {
         const scheduleRepository = yield* ScheduleRepository
-        return scheduleRepository.findManyWithItems({
+        return yield* scheduleRepository.findManyWithItems({
           userId,
           deviceId,
           startDate,
@@ -59,7 +59,7 @@ export const createScheduleTools = (userId: UserId) => ({
     execute: ({ scheduleId }) =>
       Effect.gen(function* execute() {
         const scheduleRepository = yield* ScheduleRepository
-        return scheduleRepository.findWithItems({ userId, scheduleId })
+        return yield* scheduleRepository.findWithItems({ userId, scheduleId })
       }).pipe(
         Effect.provide(DrizzleScheduleRepository),
         Effect.provide(DrizzleClient.layer),
