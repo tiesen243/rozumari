@@ -1,4 +1,4 @@
-import { eq, sql } from 'drizzle-orm'
+import { and, eq, sql } from 'drizzle-orm'
 import * as Effect from 'effect/Effect'
 import * as Layer from 'effect/Layer'
 
@@ -25,7 +25,10 @@ export const DrizzleDeviceRepository = Layer.effect(
     return {
       ...repository,
 
-      findWithCompartment: Effect.fn(function* findWithCompartment(deviceId) {
+      findWithCompartment: Effect.fn(function* findWithCompartment(opts) {
+        const whereClauses = [eq(devices.id, opts.deviceId)]
+        if (opts.userId) whereClauses.push(eq(devices.userId, opts.userId))
+
         const [row] = yield* db
           .select({
             devices,
@@ -52,7 +55,7 @@ export const DrizzleDeviceRepository = Layer.effect(
               .as('compartments'),
           })
           .from(devices)
-          .where(eq(devices.id, deviceId))
+          .where(and(...whereClauses))
           .innerJoin(compartments, eq(compartments.deviceId, devices.id))
           .groupBy(devices.id)
           .limit(1)

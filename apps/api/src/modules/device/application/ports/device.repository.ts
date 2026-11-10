@@ -1,4 +1,5 @@
 import type { DeviceId } from '@rozumari/contract/device/schemas/device.schema'
+import type { UserId } from '@rozumari/contract/user/schemas/user.schema'
 import type { Effect } from 'effect/Effect'
 
 import * as Context from 'effect/Context'
@@ -8,9 +9,10 @@ import type { Device } from '@/modules/device/domain/entities/device.entity'
 import type { IBaseRepository } from '@/shared/application/repositories/base.repository'
 
 interface IDeviceRepository extends IBaseRepository<Device> {
-  readonly findWithCompartment: (
+  readonly findWithCompartment: (options: {
+    userId?: UserId
     deviceId: DeviceId
-  ) => Effect<DeviceCompartmentsAggregate | null>
+  }) => Effect<DeviceCompartmentsAggregate | null>
 }
 
 export class DeviceRepository extends Context.Service<

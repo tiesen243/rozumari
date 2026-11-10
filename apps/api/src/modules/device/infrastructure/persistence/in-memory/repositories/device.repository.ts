@@ -19,16 +19,19 @@ export const InMemoryDeviceRepository = Layer.effect(
     return {
       ...repository,
 
-      findWithCompartment: Effect.fn(function* findWithCompartment(deviceId) {
+      findWithCompartment: Effect.fn(function* findWithCompartment(opts) {
         const [device] = yield* repository.findMany({
-          where: { id: { eq: deviceId } },
+          where: {
+            id: { eq: opts.deviceId },
+            ...(opts.userId && { userId: { eq: opts.userId } }),
+          },
           limit: 1,
         })
         if (!device) return null
 
         const compartments = yield* Ref.get(db.compartments).pipe(
           Effect.map((dict) =>
-            [...dict.values()].filter((c) => c.deviceId === deviceId)
+            [...dict.values()].filter((c) => c.deviceId === opts.deviceId)
           )
         )
         if (compartments.length === 0) return null

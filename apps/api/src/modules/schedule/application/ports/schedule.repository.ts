@@ -10,9 +10,10 @@ import type { Schedule } from '@/modules/schedule/domain/entities/schedule.entit
 import type { IBaseRepository } from '@/shared/application/repositories/base.repository'
 
 interface IScheduleRepository extends IBaseRepository<Schedule> {
-  readonly findWithItems: (
+  readonly findWithItems: (options: {
+    userId?: UserId
     scheduleId: ScheduleId
-  ) => Effect<ScheduleAggregateSchema | null>
+  }) => Effect<ScheduleAggregateSchema | null>
 
   readonly findManyWithItems: (options: {
     userId?: UserId
