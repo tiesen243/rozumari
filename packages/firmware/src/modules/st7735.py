@@ -58,16 +58,20 @@ class ST7735:
         """
         Get the current logical canvas size based on rotation and orientation.
 
-        :return: Tuple of (width, height) in pixels.
+        Returns:
+            Tuple of (width, height) in pixels.
         """
         return self._size
 
-    def on(self, on: bool = True):
+    def on(self, on: bool = True) -> None:
         """
         Turn display screen output ON or OFF.
 
-        :param on: Set `True` to enable screen output, `False` to turn off.
-        :return: None
+        Args:
+            on: Set `True` to enable screen output, `False` to turn off.
+
+        Returns:
+            None
         """
         self._cmd(ST7735.DISPON if on else ST7735.DISPOFF)
 
@@ -75,8 +79,11 @@ class ST7735:
         """
         Invert display colors.
 
-        :param invert: Set `True` to enable color inversion, `False` for normal colors.
-        :return: None
+        Args:
+            invert: Set `True` to enable color inversion, `False` for normal colors.
+
+        Returns:
+            None
         """
         self._cmd(ST7735.INVON if invert else ST7735.INVOFF)
 
@@ -84,8 +91,11 @@ class ST7735:
         """
         Configure pixel color order mode between RGB and BGR.
 
-        :param rgb: Set `True` for RGB color order, `False` for BGR.
-        :return: None
+        Args:
+            rgb: Set `True` for RGB color order, `False` for BGR.
+
+        Returns:
+            None
         """
         self._rgb = rgb
         self._set_MADCTL()
@@ -94,8 +104,11 @@ class ST7735:
         """
         Rotate display orientation and automatically swap logical canvas dimensions.
 
-        :param rotate: Rotation index (0: 0°, 1: 90°, 2: 180°, 3: 270°).
-        :return: None
+        Args:
+            rotate: Rotation index (0: 0°, 1: 90°, 2: 180°, 3: 270°).
+
+        Returns:
+            None
         """
         if 0 <= rotate <= 3:
             root_change = self._rotate ^ rotate
@@ -109,9 +122,12 @@ class ST7735:
         """
         Draw a single pixel at the specified coordinate.
 
-        :param pos: Pixel coordinate tuple (x, y).
-        :param color: 16-bit RGB565 color value.
-        :return: None
+        Args:
+            pos: Pixel coordinate tuple (x, y).
+            color: 16-bit RGB565 color value.
+
+        Returns:
+            None
         """
         if 0 <= pos[0] < self._size[0] and 0 <= pos[1] < self._size[1]:
             self._set_window_point(pos)
@@ -129,13 +145,16 @@ class ST7735:
         """
         Render string text onto display with custom fonts, scaling, and line wrapping options.
 
-        :param pos: Top-left start coordinate tuple (x, y).
-        :param text: String payload to render.
-        :param color: 16-bit RGB565 text color value.
-        :param font: Font dictionary mapping character glyph data.
-        :param size: Uniform scale factor integer or scale tuple (x_scale, y_scale).
-        :param wrap: Set `True` to wrap text to next line on reaching display border.
-        :return: None
+        Args:
+            pos: Top-left start coordinate tuple (x, y).
+            text: String payload to render.
+            color: 16-bit RGB565 text color value.
+            font: Font dictionary mapping character glyph data.
+            size: Uniform scale factor integer or scale tuple (x_scale, y_scale).
+            wrap: Set `True` to wrap text to next line on reaching display border.
+
+        Returns:
+            None
         """
 
         if isinstance(size, int):
@@ -167,12 +186,15 @@ class ST7735:
         """
         Render a single scaled character glyph into memory buffer and output to screen.
 
-        :param pos: Top-left coordinate tuple (x, y).
-        :param char: Single character string to render.
-        :param color: 16-bit RGB565 color value.
-        :param font: Font dictionary mapping character glyph data.
-        :param sizes: Horizontal and vertical scaling factor tuple (width_scale, height_scale).
-        :return: None
+        Args:
+            pos: Top-left coordinate tuple (x, y).
+            char: Single character string to render.
+            color: 16-bit RGB565 color value.
+            font: Font dictionary mapping character glyph data.
+            sizes: Horizontal and vertical scaling factor tuple (width_scale, height_scale).
+
+        Returns:
+            None
         """
         start_char = font.get("start", 0)
         end_char = font.get("end", 0)
@@ -214,12 +236,15 @@ class ST7735:
         """
         Blit a raw byte array buffer directly to a rectangular screen region.
 
-        :param x: Left coordinate starting position.
-        :param y: Top coordinate starting position.
-        :param w: Region width in pixels.
-        :param h: Region height in pixels.
-        :param data: Bytearray buffer containing 16-bit RGB565 pixel data.
-        :return: None
+        Args:
+            x: Left coordinate starting position.
+            y: Top coordinate starting position.
+            w: Region width in pixels.
+            h: Region height in pixels.
+            data: Bytearray buffer containing 16-bit RGB565 pixel data.
+
+        Returns:
+            None
         """
         self.image(x, y, x + w - 1, y + h - 1, data)
 
@@ -227,10 +252,13 @@ class ST7735:
         """
         Draw a straight line between two points using Bresenham's algorithm or optimized axis methods.
 
-        :param start: Starting coordinate tuple (x, y).
-        :param end: Ending coordinate tuple (x, y).
-        :param color: 16-bit RGB565 line color value.
-        :return: None
+        Args:
+            start: Starting coordinate tuple (x, y).
+            end: Ending coordinate tuple (x, y).
+            color: 16-bit RGB565 line color value.
+
+        Returns:
+            None
         """
 
         if start[0] == end[0]:
@@ -280,10 +308,13 @@ class ST7735:
         """
         Draw a fast vertical line starting from a given position.
 
-        :param pos: Top-left coordinate tuple (x, y).
-        :param length: Line height length in pixels.
-        :param color: 16-bit RGB565 color value.
-        :return: None
+        Args:
+            pos: Top-left coordinate tuple (x, y).
+            length: Line height length in pixels.
+            color: 16-bit RGB565 color value.
+
+        Returns:
+            None
         """
         x, y = pos
 
@@ -301,10 +332,13 @@ class ST7735:
         """
         Draw a fast horizontal line starting from a given position.
 
-        :param pos: Top-left coordinate tuple (x, y).
-        :param length: Line width length in pixels.
-        :param color: 16-bit RGB565 color value.
-        :return: None
+        Args:
+            pos: Top-left coordinate tuple (x, y).
+            length: Line width length in pixels.
+            color: 16-bit RGB565 color value.
+
+        Returns:
+            None
         """
         x, y = pos
 
@@ -322,10 +356,13 @@ class ST7735:
         """
         Draw an unfilled rectangle outline.
 
-        :param pos: Top-left coordinate tuple (x, y).
-        :param size: Dimension tuple (width, height).
-        :param color: 16-bit RGB565 color value.
-        :return: None
+        Args:
+            pos: Top-left coordinate tuple (x, y).
+            size: Dimension tuple (width, height).
+            color: 16-bit RGB565 color value.
+
+        Returns:
+            None
         """
 
         self.hline(pos, size[0], color)
@@ -340,10 +377,13 @@ class ST7735:
         """
         Draw a solid filled rectangle.
 
-        :param pos: Top-left coordinate tuple (x, y).
-        :param size: Dimension tuple (width, height).
-        :param color: 16-bit RGB565 color value.
-        :return: None
+        Args:
+            pos: Top-left coordinate tuple (x, y).
+            size: Dimension tuple (width, height).
+            color: 16-bit RGB565 color value.
+
+        Returns:
+            None
         """
         start = clamp(pos[0], 0, self._size[0]), clamp(pos[1], 0, self._size[1])
         end = (
@@ -369,10 +409,13 @@ class ST7735:
         """
         Draw an unfilled circle outline using symmetry algorithm.
 
-        :param pos: Center coordinate tuple (x, y).
-        :param radius: Radius of the circle in pixels.
-        :param color: 16-bit RGB565 color value.
-        :return: None
+        Args:
+            pos: Center coordinate tuple (x, y).
+            radius: Radius of the circle in pixels.
+            color: 16-bit RGB565 color value.
+
+        Returns:
+            None
         """
         self._color_data[0] = color >> 8
         self._color_data[1] = color
@@ -413,10 +456,13 @@ class ST7735:
         """
         Draw a solid filled circle using vertical scan lines.
 
-        :param pos: Center coordinate tuple (x, y).
-        :param radius: Radius of the circle in pixels.
-        :param color: 16-bit RGB565 color value.
-        :return: None
+        Args:
+            pos: Center coordinate tuple (x, y).
+            radius: Radius of the circle in pixels.
+            color: 16-bit RGB565 color value.
+
+        Returns:
+            None
         """
         self._color_data[0] = color >> 8
         self._color_data[1] = color
@@ -436,8 +482,11 @@ class ST7735:
         """
         Clear and fill the entire screen canvas with a uniform color.
 
-        :param color: 16-bit RGB565 color value.
-        :return: None
+        Args:
+            color: 16-bit RGB565 color value.
+
+        Returns:
+            None
         """
         self.fill_rect((0, 0), self._size, color)
 
@@ -445,12 +494,15 @@ class ST7735:
         """
         Send raw pixel bytearray data directly to a defined window bounding box.
 
-        :param x0: Left boundary pixel coordinate.
-        :param y0: Top boundary pixel coordinate.
-        :param x1: Right boundary pixel coordinate.
-        :param y1: Bottom boundary pixel coordinate.
-        :param data: Bytearray buffer of pixel colors.
-        :return: None
+        Args:
+            x0: Left boundary pixel coordinate.
+            y0: Top boundary pixel coordinate.
+            x1: Right boundary pixel coordinate.
+            y1: Bottom boundary pixel coordinate.
+            data: Bytearray buffer of pixel colors.
+
+        Returns:
+            None
         """
         self._set_window_loc((x0, y0), (x1, y1))
         self._data(data)
@@ -459,9 +511,12 @@ class ST7735:
         """
         Configure hardware vertical scrolling area definition parameters.
 
-        :param tfa: Top Fixed Area height in pixels.
-        :param bfa: Bottom Fixed Area height in pixels.
-        :return: None
+        Args:
+            tfa: Top Fixed Area height in pixels.
+            bfa: Bottom Fixed Area height in pixels.
+
+        Returns:
+            None
         """
         self._cmd(ST7735.VSCRDEF)
 
@@ -481,8 +536,11 @@ class ST7735:
         """
         Scroll screen content vertically by a designated pixel offset.
 
-        :param value: Vertical scroll pixel shift value.
-        :return: None
+        Args:
+            value: Vertical scroll pixel shift value.
+
+        Returns:
+            None
         """
         a = value + self._tfa
 
@@ -495,8 +553,11 @@ class ST7735:
         """
         Send vertical scroll start address register command.
 
-        :param addr: Memory line start address.
-        :return: None
+        Args:
+            addr: Memory line start address.
+
+        Returns:
+            None
         """
         self._cmd(ST7735.VSCSAD)
         data2 = bytearray([addr >> 8, addr & 0xFF])
@@ -506,8 +567,11 @@ class ST7735:
         """
         Prepare internal 16-bit color byte structure and duplicate into block write buffers.
 
-        :param color: 16-bit RGB565 color value.
-        :return: None
+        Args:
+            color: 16-bit RGB565 color value.
+
+        Returns:
+            None
         """
         self._color_data[0] = color >> 8
         self._color_data[1] = color
@@ -517,8 +581,11 @@ class ST7735:
         """
         Flush pre-calculated color buffers across SPI to render pixel blocks.
 
-        :param pixels: Total count of pixels to transmit.
-        :return: None
+        Args:
+            pixels: Total count of pixels to transmit.
+
+        Returns:
+            None
         """
         self.dc.value(1)
         self.cs.value(0)
@@ -537,8 +604,11 @@ class ST7735:
         """
         Transmit a single command byte over SPI with DC pin pulled LOW.
 
-        :param cmd: Register command byte.
-        :return: None
+        Args:
+            cmd: Register command byte.
+
+        Returns:
+            None
         """
         self.dc.value(0)
         self.cs.value(0)
@@ -549,8 +619,11 @@ class ST7735:
         """
         Transmit data payload buffer over SPI with DC pin pulled HIGH.
 
-        :param data: Bytearray buffer containing data payload.
-        :return: None
+        Args:
+            data: Bytearray buffer containing data payload.
+
+        Returns:
+            None
         """
         self.dc.value(1)
         self.cs.value(0)
@@ -561,7 +634,8 @@ class ST7735:
         """
         Update Memory Data Access Control (MADCTL) register for screen orientation and color modes.
 
-        :return: None
+        Returns:
+            None
         """
         self._cmd(ST7735.MADCTL)
         rgb = RGB if self._rgb else BGR
@@ -571,7 +645,8 @@ class ST7735:
         """
         Perform a hardware pin toggle reset sequence on the display module.
 
-        :return: None
+        Returns:
+            None
         """
         self.rs.value(1)
         time.sleep(0.05)
@@ -584,8 +659,11 @@ class ST7735:
         """
         Set active window bounding bounds to target a single pixel coordinate.
 
-        :param pos: Pixel coordinate tuple (x, y).
-        :return: None
+        Args:
+            pos: Pixel coordinate tuple (x, y).
+
+        Returns:
+            None
         """
         x = self._offset[0] + int(pos[0])
         y = self._offset[1] + int(pos[1])
@@ -610,9 +688,12 @@ class ST7735:
         """
         Set CASET/RASET address registers to define a rectangular drawing region window.
 
-        :param pos_0: Top-left coordinate tuple (x, y).
-        :param pos_1: Bottom-right coordinate tuple (x, y).
-        :return: None
+        Args:
+            pos_0: Top-left coordinate tuple (x, y).
+            pos_1: Bottom-right coordinate tuple (x, y).
+
+        Returns:
+            None
         """
         x0 = self._offset[0] + int(pos_0[0])
         x1 = self._offset[0] + int(pos_1[0])
@@ -639,8 +720,11 @@ class ST7735:
         """
         Push 16-bit color byte data to display RAM.
 
-        :param color: 16-bit RGB565 color value.
-        :return: None
+        Args:
+            color: 16-bit RGB565 color value.
+
+        Returns:
+            None
         """
         self._color_data[0] = color >> 8
         self._color_data[1] = color
@@ -650,7 +734,8 @@ class ST7735:
         """
         Execute full hardware initialization sequence and reset display panel configuration registers.
 
-        :return: None
+        Returns:
+            None
         """
         self._reset()
 
@@ -709,7 +794,8 @@ class ST7735:
         """
         Deinitialize the display and release SPI resources.
 
-        :return: None
+        Returns:
+            None
         """
         self._cmd(ST7735.SLPIN)
         time.sleep(0.1)

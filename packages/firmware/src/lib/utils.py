@@ -19,7 +19,18 @@ def get_current_time() -> time.struct_time:
 
 
 def rgb(r: int, g: int, b: int, invert: bool = False) -> int:
-    """Convert 8-bit RGB channels to a packed RGB565 integer."""
+    """
+    Convert RGB values to a packed 16-bit color value (RGB565 format).
+
+    Args:
+        r (int): Red component (0-255).
+        g (int): Green component (0-255).
+        b (int): Blue component (0-255).
+        invert (bool): If True, invert the color order (BGR instead of RGB).
+
+    Returns:
+        int: Packed 16-bit color value in RGB565 format.
+    """
     if invert:
         val = ((b & 0xF8) << 8) | ((g & 0xFC) << 3) | (r >> 3)
     else:
@@ -29,18 +40,43 @@ def rgb(r: int, g: int, b: int, invert: bool = False) -> int:
 
 
 def swap_color(color: int) -> int:
-    """Swap the byte order of a packed 16-bit color value."""
+    """
+    Swap the two bytes of a 16-bit color value.
+
+    Args:
+        color (int): 16-bit color value in RGB565 format.
+
+    Returns:
+        int: 16-bit color value with bytes swapped.
+    """
     # Swap the two bytes so framebuf receives RGB565 in the expected order.
     return ((color & 0xFF) << 8) | ((color >> 8) & 0xFF)
 
 
 def clamp(value: int, _min: int, _max: int) -> int:
-    """Clamp a numeric value to the inclusive range [_min, _max]."""
+    """
+    Clamp a value between a minimum and maximum range.
+
+    Args:
+        value (int): The value to be clamped.
+        _min (int): The minimum allowed value.
+        _max (int): The maximum allowed value.
+
+    Returns:
+        int: The clamped value, ensuring it falls within the specified range.
+    """
     return max(_min, min(_max, value))
 
 
 def print_table(data: list[dict], keys: list[str] | None = None) -> None:
-    """Print records as a compact ASCII table for diagnostics."""
+    """
+    Print a formatted table from a list of dictionaries.
+
+    Args:
+        data (list[dict]): A list of dictionaries representing the table rows.
+        keys (list[str] | None): Optional list of keys to display as columns. If
+            None, all keys from the first dictionary will be used.
+    """
     if not data:
         print(t("utils.empty_table"))
         return

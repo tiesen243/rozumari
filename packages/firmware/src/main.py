@@ -52,11 +52,33 @@ class Bootstrap:
         self._link = Link.create()
 
     def _switch_irq_handler(self, pin: Pin) -> None:
+        """
+        Interrupt handler for the mode switch pin. This method is called when the switch state changes (pressed or released).
+        It sets the switch_flag to notify the main loop that a mode change has occurred.
+
+        Args:
+            pin (Pin): The Pin object representing the mode switch.
+
+        Returns:
+            None
+        """
         self._switch_flag.set()
 
     async def _wait_for_switch_change(
         self, current_mode: int, mode_task: asyncio.Task
     ) -> None:
+        """
+        Wait for the mode switch to change state. This method continuously checks the state of the mode switch pin.
+        If the switch state changes from the current mode, it cancels the provided mode_task to
+        initiate a mode transition.
+
+        Args:
+            current_mode (int): The current mode value (CONFIG_MODE_VALUE or NORMAL_MODE_VALUE).
+            mode_task (asyncio.Task): The asyncio task representing the current mode operation.
+
+        Returns:
+            None
+        """
         while not mode_task.done():
             await self._switch_flag.wait()
             await asyncio.sleep(SWITCH_DEBOUNCE_MS / 1000)
@@ -68,7 +90,14 @@ class Bootstrap:
             return
 
     async def _config_mode(self) -> None:
-        """Run Config Mode (BLE) until the mode switch is released."""
+        """
+        Run Config Mode (BLE) and terminate cleanly when stop_event is set.
+        This method initializes the BLE module, activates it if necessary, and starts advertising for BLE connections
+        while displaying the configuration mode on the display. It runs indefinitely until interrupted or an error occurs.
+
+        Returns:
+            None
+        """
         try:
             self._ble = BLE.create()
             self._display.show_config_mode()
@@ -96,7 +125,15 @@ class Bootstrap:
             print(t("config.stopped"))
 
     async def _normal_mode(self) -> None:
-        """Run Normal Mode (WiFi, Sync, Tasks) and terminate cleanly when stop_event is set."""
+        """
+        Run Normal Mode (WiFi) and terminate cleanly when stop_event is set.
+        This method initializes the WiFi module, attempts to connect to the configured WiFi network,
+        synchronizes the device time, and starts various tasks such as display, link, schedule synchronization
+        and streaming. It runs indefinitely until interrupted or an error occurs.
+
+        Returns:
+            None
+        """
         _ = Config.create(force=True)
         self._display.show_boot_logo()
 
@@ -167,6 +204,18 @@ class Bootstrap:
             print(t("normal.stopped"))
 
     async def _run_mode(self, mode: int) -> None:
+        """
+        Run the specified mode (Config Mode or Normal Mode) and handle mode transitions.
+        This method determines the mode to run based on the provided mode value, starts the corresponding mode
+        coroutine, and waits for the mode to complete or be interrupted by a mode switch. It also handles exceptions
+        and ensures proper cleanup of tasks.
+
+        Args:
+            mode (int): The mode value to run (CONFIG_MODE_VALUE or NORMAL_MODE_VALUE).
+
+        Returns:
+            None
+        """
         mode_name = "Unknown Mode"
 
         if mode == CONFIG_MODE_VALUE:
@@ -198,7 +247,15 @@ class Bootstrap:
             )
 
     async def start(self) -> None:
-        """Main loop managing seamless soft transitions between Config Mode and Normal Mode."""
+        """
+        Start the main loop of the application, continuously checking the mode switch and running the appropriate mode.
+        This method runs indefinitely, checking the state of the mode switch pin and executing the corresponding mode
+        (Config Mode or Normal Mode) based on the switch value. It handles mode transitions and
+        ensures proper cleanup of tasks when switching modes.
+
+        Returns:
+            None
+        """
         while True:
             current_mode = self._switch.value()
             await self._run_mode(current_mode)
@@ -206,6 +263,15 @@ class Bootstrap:
             await asyncio.sleep(1)
 
     async def stop(self) -> None:
+        """
+        Stop all running tasks and clean up resources.
+        This method stops the BLE and WiFi connections, as well as all running tasks such as
+        display, link, schedule synchronization, streaming, and schedules. It ensures that all resources are properly released
+        and cleaned up before exiting.
+
+        Returns:
+            None
+        """
         if self._ble and self._ble.is_connected():
             self._ble.stop()
         if self._wifi:

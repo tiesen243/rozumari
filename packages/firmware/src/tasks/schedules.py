@@ -25,7 +25,17 @@ class Schedules:
         self._current_task = None
 
     async def start(self, schedules_data: list | None = None) -> None:
-        """Run the schedule polling loop and execute due schedules."""
+        """
+        Start the schedule polling loop.
+        This method continuously checks the current time against the scheduled tasks and executes them when their scheduled time is reached. It prints the current date and time, checks for pending schedules, and executes the corresponding items.
+
+        Args:
+            schedules_data (list | None): Optional list of schedules to use instead of fetching from the
+                                            schedule service. If None, it will fetch the schedules from the schedule service.
+
+        Returns:
+            None
+        """
         if self._current_task is not None:
             return
         self._current_task = asyncio.current_task()

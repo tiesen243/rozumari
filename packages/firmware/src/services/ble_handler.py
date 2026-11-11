@@ -21,10 +21,23 @@ STATUS_SUCCESS = 1
 
 
 class BLEHandler:
+    __instance: BLEHandler | None = None
+
     def __init__(self, ble_instance) -> None:
         self._ble = ble_instance
 
     def _update_timeout_config(self, config: Config, key: str, timeout) -> bool:
+        """
+        Update the timeout configuration for a specific key in the configuration.
+
+        Args:
+            config: The Config instance to update.
+            key: The key for the timeout to update (e.g., "drop", "open", "close").
+            timeout: The new timeout value to set (in milliseconds).
+
+        Returns:
+            True if the configuration was saved successfully, False otherwise.
+        """
         timeouts = config.get("timeouts", {})
         if not isinstance(timeouts, dict):
             timeouts = {}
@@ -33,6 +46,16 @@ class BLEHandler:
         return config.set("timeouts", timeouts)
 
     async def handle_command(self, action: str, payload: dict) -> None:
+        """
+        Handle incoming BLE commands based on the action and payload.
+
+        Args:
+            action: The action string representing the command to handle.
+            payload: The payload dictionary containing additional data for the command.
+
+        Returns:
+            None
+        """
         config = Config.create()
 
         if action == "ping":
@@ -108,7 +131,12 @@ class BLEHandler:
             await self._ble.send_code(ACTION_SET_CLOSE_TIMEOUT_RES, status)
 
     async def on_connect(self) -> None:
-        """Callback triggered when a BLE client connects to transmit device status payload."""
+        """
+        Handle BLE connection event by sending the current device configuration to the connected device.
+
+        Returns:
+            None
+        """
         await asyncio.sleep(1)
         status_code = self._build_device_info_payload()
         await self._ble.send_code(ACTION_SEND_DEVICE_INFO, status_code)
@@ -119,7 +147,8 @@ class BLEHandler:
         await self._ble.send_code(ACTION_CHECK_WIFI_RES, status)
 
     def _build_device_info_payload(self) -> int:
-        """Encode current device configuration into a single 34-bit integer payload.
+        """
+        Encode current device configuration into a single 34-bit integer payload.
 
         Bit Layout (Total 34 bits):
         - Bits 0..3   (4b): UTC Offset
@@ -128,6 +157,9 @@ class BLEHandler:
         - Bits 16..21 (6b): Drop Timeout (seconds, 0..63)
         - Bits 22..27 (6b): Open Timeout (seconds, 0..63)
         - Bits 28..33 (6b): Close Timeout (seconds, 0..63)
+
+        Returns:
+            An integer representing the encoded device configuration.
         """
         config = Config.create()
 
@@ -200,3 +232,9 @@ class BLEHandler:
             | ((open_sec & 0x3F) << 22)
             | ((close_sec & 0x3F) << 28)
         )
+
+    @classmethod
+    def create(cls, ble_instance) -> BLEHandler:
+        if cls.__instance is None:
+            cls.__instance = cls(ble_instance)
+        return cls.__instance

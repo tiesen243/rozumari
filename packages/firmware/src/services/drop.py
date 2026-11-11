@@ -50,7 +50,13 @@ class Drop:
         asyncio.create_task(self._buzzer_task())
 
     async def _buzzer_task(self) -> None:
+        """
+        Asynchronous task to control the buzzer based on the _buzzer_enable flag.
+        This task runs indefinitely and checks the _buzzer_enable flag. If the flag is set to True,
 
+        Returns:
+            None
+        """
         while True:
             if not self._buzzer_enable:
                 self._buzzer.duty_u16(0)
@@ -63,7 +69,16 @@ class Drop:
             await asyncio.sleep(0.5)
 
     async def _deduct_medicine_capacity(self, dispensed_items: list[dict]) -> None:
-        """Deducts medicine capacity for slots where items were physically dispensed."""
+        """
+        Deducts the actual capacity of dispensed items from the device's storage slots.
+
+        Args:
+            dispensed_items: A list of dictionaries containing information about the dispensed items,
+                                including the slot and quantity.
+
+        Returns:
+            None
+        """
         slots_payload = [
             {"position": item["slot"], "capacity": item["quantity"]}
             for item in dispensed_items
@@ -81,7 +96,13 @@ class Drop:
             )
 
     async def _handle_post_dispense_sequence(self) -> bool:
-        """Executes drawer opening/closing sequence and monitors the discard bin for uncollected items."""
+        """
+        Handles the post-dispense sequence, including opening the drawer, waiting for retrieval,
+        closing the drawer, opening the discard flap, waiting for discard, and closing the discard flap.
+
+        Returns:
+            True if the discard check is clear (no items detected in the discard bin), False otherwise
+        """
         print(t("drop.opening_drawer"))
         await self._stepper.move_drawer(deg=60)
         self._buzzer_enable = True
@@ -120,7 +141,18 @@ class Drop:
         return True
 
     async def execute(self, items: list[dict], schedule_id: str | None = None) -> bool:
-        """Executes full dispensing flow: Servo drops -> Deduct actual capacity -> Drawer & Discard sequence -> API Notifications."""
+        """
+        Execute the dispensing process for a list of items, handling required and optional failures,
+        and managing the post-dispense sequence.
+
+        Args:
+            items: A list of dictionaries containing information about the items to dispense,
+                    including the slot, quantity, and whether the item is required.
+            schedule_id: An optional schedule ID associated with the dispensing process.
+
+        Returns:
+            True if the dispensing process was successful (including optional failures), False otherwise.
+        """
         required_failures = []
         optional_failures = []
         dispensed_successfully = []
@@ -174,16 +206,8 @@ class Drop:
             data["scheduleId"] = None
             data["body"] = t("notification.required_failed")
 
-        # Handle required dispensing failures immediately. A schedule_id means
-        # this was triggered automatically by the device schedule; without it,
-        # the request came manually from the app.
         if required_failures:
-            print(
-                t(
-                    "drop.required_failed",
-                    count=len(required_failures),
-                )
-            )
+            print(t("drop.required_failed", count=len(required_failures)))
             await self._api.post("/api/notifications/send", data=data)
             if schedule_id:
                 _ = await self._schedule.update_status(schedule_id, "failed")
@@ -228,6 +252,7 @@ class Drop:
                 t("lcd.auto_done") if schedule_id else t("lcd.manual_done"),
                 t("lcd.drop_warning"),
             )
+
             return True
 
         print(t("drop.success"))
@@ -247,6 +272,7 @@ class Drop:
             t("lcd.auto_done") if schedule_id else t("lcd.manual_done"),
             t("lcd.drop_completed"),
         )
+
         return True
 
     @classmethod

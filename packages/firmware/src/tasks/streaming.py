@@ -39,6 +39,15 @@ class Streaming:
         self._led = pins.led
 
     def _is_digit(self, val: str) -> bool:
+        """
+        Check if the given string is a valid hexadecimal number.
+
+        Args:
+            val (str): The string to check.
+
+        Returns:
+            True if the string is a valid hexadecimal number, False otherwise.
+        """
         try:
             _ = int(val, 16)
             return True
@@ -46,6 +55,15 @@ class Streaming:
             return False
 
     async def _handle_payload(self, line: str) -> None:
+        """
+        Handle incoming SSE payloads and perform actions based on the received data.
+
+        Args:
+            line (str): The incoming SSE payload line.
+
+        Returns:
+            None
+        """
         await asyncio.sleep(0.1)
 
         clean_line = line.strip()
@@ -200,13 +218,24 @@ class Streaming:
             )
 
     async def _on_stream_connected(self) -> None:
-        """Handle a successful SSE connection."""
+        """
+        Callback function to handle the event when the SSE stream is successfully connected.
+
+        Returns:
+            None
+        """
         self._connected = True
         self._display.clear_stream_status()
         print(t("stream.connected"))
 
     async def start(self) -> None:
-        """Start continuous SSE streaming listener loop with backoff logic."""
+        """
+        Start the continuous SSE streaming listener loop. This method will keep trying to connect to the SSE endpoint
+        and handle incoming payloads. If the connection is lost, it will retry with exponential backoff.
+
+        Returns:
+            None
+        """
         if self._current_task is not None:
             return
 
@@ -269,7 +298,14 @@ class Streaming:
             self._current_task = None
 
     async def stop(self) -> None:
-        """Stop the continuous SSE streaming listener loop."""
+        """
+        Stop the streaming task if it is currently running.
+        This method cancels the current streaming task and waits for it to finish. If there is
+        no active streaming task, it simply returns without doing anything.
+
+        Returns:
+            None
+        """
         task = self._current_task
         if task is None:
             return

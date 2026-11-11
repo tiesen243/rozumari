@@ -46,10 +46,10 @@
       "@tanstack/react-query": "^5.107.1",
       "@tiesen/effect-tanstack-query": "^0.0.26",
       "react-native-safe-area-context": "~5.11.1",
-      "react-native-svg": "~15.16.1"
+      "react-native-svg": "~15.16.0"
     },
     "i18n": {
-      "i18next": "^27.1.0",
+      "i18next": "^27.1.1",
       "react-i18next": "^18.0.1"
     },
     "effect": {
