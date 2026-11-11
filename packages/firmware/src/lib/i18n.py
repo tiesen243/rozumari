@@ -14,6 +14,16 @@ class Translation:
         self._load_language("en")
 
     def _load_file(self, language: str) -> dict:
+        """
+        Load the translation file for the specified language.
+
+        Args:
+            language: The language code (e.g., 'en', 'es') for which to load the translation file.
+
+        Returns:
+            A dictionary containing the translation key-value pairs for the specified language.
+        """
+
         path = f"{self._locale_dir}/{language}.json"
         try:
             with open(path, "r") as f:
@@ -24,6 +34,12 @@ class Translation:
             return {}
 
     def _load_language(self, language: str) -> None:
+        """
+        Load the translation files for the specified language and set up the fallback.
+
+        Args:
+            language: The language code (e.g., 'en', 'es') for which to load the translation files.
+        """
         language = str(language or "en").lower().split("-")[0]
         self._fallback = self._load_file("en")
         self._translations = (
@@ -32,6 +48,11 @@ class Translation:
         self._language = language
 
     def _sync_language(self) -> None:
+        """
+        Synchronize the current language with the configuration settings.
+        This method checks the current language setting in the configuration and loads
+        the appropriate translation files if the language has changed.
+        """
         config = Config.create()
         language = config.get("language", "en")
         language = str(language or "en").lower().split("-")[0]
@@ -39,6 +60,16 @@ class Translation:
             self._load_language(language)
 
     def translate(self, key: str, **params) -> str:
+        """
+        Translate the given key into the current language, applying any provided parameters.
+
+        Args:
+            key: The translation key to look up.
+            params: Optional keyword arguments to format the translation string.
+
+        Returns:
+            The translated string with parameters applied, or the key itself if no translation is found.
+        """
         self._sync_language()
 
         value = self._translations.get(key)
@@ -54,7 +85,12 @@ class Translation:
         return value
 
     def use(self):
-        """Return the translation function: t = Translation.create().use()."""
+        """
+        Return the translate method for use as a callable function.
+
+        Returns:
+            A callable function that translates keys into the current language.
+        """
         return self.translate
 
     def __call__(self, key: str, **params) -> str:

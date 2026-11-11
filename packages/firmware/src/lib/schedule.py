@@ -19,7 +19,8 @@ class Schedule:
         """
         Load the schedules from the JSON persistence store.
 
-        :return: True if load was successful, False otherwise.
+        Returns:
+            True if load was successful, False otherwise.
         """
         try:
             with open(self._path, "r") as f:
@@ -38,7 +39,8 @@ class Schedule:
         """
         Get the list of schedules.
 
-        :return: List of schedule dictionaries.
+        Returns:
+            List of schedule dictionaries.
         """
         if not self._schedules or len(self._schedules) == 0:
             _ = self.load_schedules()
@@ -48,9 +50,12 @@ class Schedule:
         """
         Update the status of a specific schedule by its ID.
 
-        :param schedule_id: The ID of the schedule to update.
-        :param new_status: The new status to set for the schedule.
-        :return: True if update was successful, False otherwise.
+        Args:
+            schedule_id: The ID of the schedule to update.
+            new_status: The new status to set for the schedule.
+
+        Returns:
+            True if update was successful, False otherwise.
         """
         update_success = False
 
@@ -71,8 +76,11 @@ class Schedule:
         """
         Save the schedules to the JSON persistence store.
 
-        :param schedules: Optional list of schedules to save. If None, saves the current schedules.
-        :return: True if save was successful, False otherwise.
+        Args:
+            schedules: Optional list of schedules to save. If None, saves the current schedules.
+
+        Returns:
+            True if save was successful, False otherwise.
         """
         if schedules is not None:
             self._schedules = schedules

@@ -15,7 +15,8 @@ class SyncInfo:
         """
         Fetch the latest information from the server and update the local configuration.
 
-        :return: True if the information was successfully updated, False otherwise.
+        Returns:
+            True if the information was successfully updated, False otherwise.
         """
         config = Config.create()
 

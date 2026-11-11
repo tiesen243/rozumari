@@ -26,6 +26,17 @@ class Api:
     async def _request(
         self, method: str, endpoint: str, body: dict | None = None
     ) -> dict:
+        """
+        Make an HTTP request to the specified endpoint with the given method and body.
+
+        Args:
+            method: The HTTP method (e.g., 'GET', 'POST').
+            endpoint: The API endpoint to send the request to.
+            body: The request body as a dictionary (for POST requests).
+
+        Returns:
+            A dictionary containing the response data or an error message.
+        """
         url = f"{self._base_url}{endpoint}"
         proto, host, port, path = self._parse_url(url)
         ssl = {"ssl": True} if proto == "https" else {}
@@ -88,6 +99,16 @@ class Api:
             _ = gc.collect()
 
     async def get(self, endpoint: str, params: dict | None = None) -> dict:
+        """
+        Make a GET request to the specified endpoint with optional query parameters.
+
+        Args:
+            endpoint: The API endpoint to send the request to.
+            params: A dictionary of query parameters to include in the request.
+
+        Returns:
+            A dictionary containing the response data or an error message.
+        """
         if params:
             query_string = "&".join(f"{key}={value}" for key, value in params.items())
             endpoint = f"{endpoint}?{query_string}"
@@ -95,15 +116,34 @@ class Api:
         return await self._request("GET", endpoint)
 
     async def post(self, endpoint: str, data: dict | None = None) -> dict:
+        """
+        Make a POST request to the specified endpoint with optional JSON data.
+
+        Args:
+            endpoint: The API endpoint to send the request to.
+            data: A dictionary of data to include in the request body.
+
+        Returns:
+            A dictionary containing the response data or an error message.
+        """
         return await self._request("POST", endpoint, body=data)
 
     async def stream(
-        self,
-        endpoint: str,
-        callback,
-        timeout: int = 30,
-        on_connect=None,
-    ) -> None:  # pyright: ignore[reportMissingParameterType]
+        self, endpoint: str, callback, timeout: int = 30, on_connect=None
+    ) -> None:
+        """
+        Establish a Server-Sent Events (SSE) connection to the specified endpoint and process incoming events.
+
+        Args:
+            endpoint: The API endpoint to connect to for SSE.
+            callback: A callable that will be invoked for each incoming event line.
+            timeout: The maximum time (in seconds) to wait for incoming events before raising a timeout
+            on_connect: An optional callable that will be invoked when the connection is established.
+
+        Raises:
+            ConnectionError: If there is an issue with the SSE connection or if the server closes the
+            connection unexpectedly.
+        """
         url = f"{self._base_url}{endpoint}"
         proto, host, port, path = self._parse_url(url)
         ssl = {"ssl": True} if proto == "https" else {}
@@ -185,6 +225,15 @@ class Api:
             _ = gc.collect()
 
     def _parse_url(self, url: str) -> tuple[str, str, int, str]:
+        """
+        Parse a URL into its components: protocol, host, port, and path.
+
+        Args:
+            url: The URL to parse.
+
+        Returns:
+            A tuple containing the protocol (str), host (str), port (int), and path (str).
+        """
         proto, _, host_path = url.partition("://")
         if not host_path:
             host_path = proto
