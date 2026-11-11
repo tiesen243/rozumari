@@ -1,44 +1,46 @@
 core:changelogs:
-  - content: "---\npackages:\n  npm:@rozumari/api:\n    type: patch\n---\n\n## Bug Fixes\n\n- Missing yield in AI tools\n"
-    filename: 2026-11-11-mwb14ci5.md
+  - content: "---\npackages:\n  npm:@rozumari/api:\n    type: patch\n  npm:@rozumari/firmware:\n    type: patch\n---\n\n## Bug Fixes\n\n- Fix missing CurrentUser dependency in get device info\n- Added notification when emit message\n"
+    filename: 2026-11-11-mwbik8j6.md
     v: 0.0.0
 core:packages:
   - id: npm:rozumari
     updated: false
   - id: npm:@rozumari/mobile
     updated: false
-  - id: npm:@rozumari/web
-    updated: false
-  - id: npm:@rozumari/ui
-    updated: false
-  - id: npm:@rozumari/firmware
-    updated: false
   - changelogIds:
-      - 2026-11-11-mwb14ci5.md
+      - 2026-11-11-mwbik8j6.md
     id: npm:@rozumari/api
     updated: true
-  - id: npm:@rozumari/contract
-    updated: false
   - id: npm:@rozumari/lib
     updated: false
-  - id: npm:@rozumari/oxlint
+  - id: npm:@rozumari/web
     updated: false
+  - changelogIds:
+      - 2026-11-11-mwbik8j6.md
+    id: npm:@rozumari/firmware
+    updated: true
   - id: npm:@rozumari/eda
     updated: false
   - id: npm:@rozumari/github
     updated: false
+  - id: npm:@rozumari/ui
+    updated: false
+  - id: npm:@rozumari/contract
+    updated: false
   - id: npm:@rozumari/tsconfig
+    updated: false
+  - id: npm:@rozumari/oxlint
     updated: false
 npm:packages:
   - id: npm:rozumari
   - id: npm:@rozumari/mobile
-  - id: npm:@rozumari/web
-  - id: npm:@rozumari/ui
-  - id: npm:@rozumari/firmware
   - id: npm:@rozumari/api
-  - id: npm:@rozumari/contract
   - id: npm:@rozumari/lib
-  - id: npm:@rozumari/oxlint
+  - id: npm:@rozumari/web
+  - id: npm:@rozumari/firmware
   - id: npm:@rozumari/eda
   - id: npm:@rozumari/github
+  - id: npm:@rozumari/ui
+  - id: npm:@rozumari/contract
   - id: npm:@rozumari/tsconfig
+  - id: npm:@rozumari/oxlint
