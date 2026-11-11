@@ -71,6 +71,16 @@ class Streaming:
 
         if action == "led":
             print(t("stream.led", payload=payload))
+            await self._api.post(
+                "/api/devices/emit",
+                data={
+                    "action": "message",
+                    "payload": {
+                        "type": "success",
+                        "content": t("stream.led_received", payload=payload),
+                    },
+                },
+            )
             self._led.value(int(payload))  # pyright: ignore[reportArgumentType]
 
         elif action == "sync_info":
@@ -87,10 +97,26 @@ class Streaming:
             )
 
             await asyncio.sleep(0.5)
-            await self._sync_info.execute()
+            res = await self._sync_info.execute()
 
             await asyncio.sleep(0.5)
             self._display.refresh_device_info()
+
+            await asyncio.sleep(0.5)
+            await self._api.post(
+                "/api/devices/emit",
+                data={
+                    "action": "message",
+                    "payload": {
+                        "type": "success" if res else "error",
+                        "content": t(
+                            "stream.sync_info_success"
+                            if res
+                            else "stream.sync_info_failed"
+                        ),
+                    },
+                },
+            )
 
         elif action == "sync_schedule":
             print(t("stream.sync_schedule"))
@@ -106,7 +132,23 @@ class Streaming:
             )
 
             await asyncio.sleep(0.5)
-            await self._sync_schedule.execute()
+            res = await self._sync_schedule.execute()
+
+            await asyncio.sleep(0.5)
+            await self._api.post(
+                "/api/devices/emit",
+                data={
+                    "action": "message",
+                    "payload": {
+                        "type": "success" if res else "error",
+                        "content": t(
+                            "stream.sync_schedule_success"
+                            if res
+                            else "stream.sync_schedule_failed"
+                        ),
+                    },
+                },
+            )
 
         elif action == "drop":
             print(t("stream.drop"))
@@ -141,7 +183,21 @@ class Streaming:
                 }
 
             self._display.show_schedule_info(schedule)
-            await self._drop.execute(items=items)
+            res = await self._drop.execute(items=items)
+
+            await asyncio.sleep(0.5)
+            await self._api.post(
+                "/api/devices/emit",
+                data={
+                    "action": "message",
+                    "payload": {
+                        "type": "success" if res else "error",
+                        "content": t(
+                            "stream.drop_success" if res else "stream.drop_failed"
+                        ),
+                    },
+                },
+            )
 
     async def _on_stream_connected(self) -> None:
         """Handle a successful SSE connection."""

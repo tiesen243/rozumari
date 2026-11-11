@@ -71,18 +71,29 @@
   "sync_info.updated": "[SyncInfo] Đã cập nhật thông tin thiết bị.",
 
   "stream.connected": "[Stream] Đã kết nối SSE stream.",
-  "stream.drop": "[Stream] Đang thực thi lệnh cấp thuốc...",
-  "stream.drop_received": "Lệnh cấp thuốc đã được nhận",
   "stream.error_retry": "[Stream] Lỗi: {error}. Thử lại sau {seconds} giây...",
   "stream.idle_timeout": "[Stream] Kết nối lại do timeout không hoạt động...",
-  "stream.led": "[Stream] Đặt trạng thái LED: {payload}",
   "stream.received": "[Stream] Nhận payload streaming: {data}",
   "stream.request_error": "Lỗi streaming request tới {url}: {error}",
   "stream.started": "[Stream] Đã khởi động tác vụ streaming...",
+
+  "stream.led": "[Stream] Đặt trạng thái LED: {payload}",
+  "stream.led_received": "Lệnh LED đã được nhận",
+
+  "stream.drop": "[Stream] Đang thực thi lệnh cấp thuốc...",
+  "stream.drop_received": "Lệnh cấp thuốc đã được nhận",
+  "stream.drop_success": "Cấp thuốc đã thực thi thành công.",
+  "stream.drop_failed": "Thực thi lệnh cấp thuốc thất bại",
+
   "stream.sync_info": "[Stream] Đang đồng bộ thông tin thiết bị...",
   "stream.sync_info_received": "Lệnh đồng bộ thông tin thiết bị đã được nhận",
+  "stream.sync_info_success": "Đồng bộ thông tin thiết bị thành công.",
+  "stream.sync_info_failed": "Đồng bộ thông tin thiết bị thất bại",
+
   "stream.sync_schedule": "[Stream] Đang đồng bộ lịch...",
   "stream.sync_schedule_received": "Lệnh đồng bộ lịch đã được nhận",
+  "stream.sync_schedule_success": "Đồng bộ lịch thành công.",
+  "stream.sync_schedule_failed": "Đồng bộ lịch thất bại",
 
   "sync_schedule.error": "[SyncSchedule] Lỗi: {error}",
   "sync_schedule.error_fetch": "[SyncSchedule] Lỗi lấy lịch hôm nay: {error}",

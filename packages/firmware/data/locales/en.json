@@ -71,18 +71,29 @@
   "sync_info.updated": "[SyncInfo] Device info updated successfully.",
 
   "stream.connected": "[Stream] SSE stream connected.",
-  "stream.drop": "[Stream] Executing drop command...",
-  "stream.drop_received": "Drop command received",
   "stream.error_retry": "[Stream] Error: {error}. Retrying in {seconds} seconds...",
   "stream.idle_timeout": "[Stream] Reconnecting due to idle timeout...",
-  "stream.led": "[Stream] Setting LED state to: {payload}",
   "stream.received": "[Stream] Received streaming payload: {data}",
   "stream.request_error": "Error in streaming request to {url}: {error}",
   "stream.started": "[Stream] Streaming task initiated...",
+
+  "stream.led": "[Stream] Setting LED state to: {payload}",
+  "stream.led_received": "LED command received",
+
+  "stream.drop": "[Stream] Executing drop command...",
+  "stream.drop_received": "Drop command received",
+  "stream.drop_success": "Drop executed successfully.",
+  "stream.drop_failed": "Failed to execute drop command",
+
   "stream.sync_info": "[Stream] Syncing device info...",
   "stream.sync_info_received": "Sync device info command received",
+  "stream.sync_info_success": "Device info synced successfully.",
+  "stream.sync_info_failed": "Failed to sync device info",
+
   "stream.sync_schedule": "[Stream] Syncing schedule...",
   "stream.sync_schedule_received": "Sync schedule command received",
+  "stream.sync_schedule_success": "Schedule synced successfully.",
+  "stream.sync_schedule_failed": "Failed to sync schedule",
 
   "sync_schedule.error": "[SyncSchedule] Error: {error}",
   "sync_schedule.error_fetch": "[SyncSchedule] Error fetching today's schedule: {error}",

@@ -1,3 +1,10 @@
+## @rozumari/firmware@0.2.4
+
+### Bug Fixes
+
+- Fix missing CurrentUser dependency in get device info
+- Added notification when emit message
+
 ## @rozumari/firmware@0.2.3
 
 ### Patch Changes
