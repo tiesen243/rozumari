@@ -35,7 +35,17 @@ class Servo:
         self._timeout = config.get("timeouts", {}).get("drop", 5)
 
     async def control(self, slot: str, pulse_us: int, speed: int = 3) -> bool:
-        """Control servo position with real-time drop detection check inside the step loop."""
+        """
+        Control the servo motor by adjusting its pulse width and speed.
+
+        Args:
+            slot: The slot identifier for the servo (e.g., "0-0", "1-1").
+            pulse_us: The desired pulse width in microseconds (0 to disable).
+            speed: The speed preset for the servo movement (1 to 4).
+
+        Returns:
+            True if a drop was detected during the operation, False otherwise.
+        """
         servo = self._servo_map.get(slot)
         if not servo:
             print(t("servo.not_found", slot=slot))
@@ -66,7 +76,15 @@ class Servo:
         return self._drop_detected
 
     def stop(self, slot: str | None = None) -> None:
-        """Disable PWM output so the servo no longer receives holding pulses."""
+        """
+        Stop the servo motor(s) by disabling the PWM signal.
+
+        Args:
+            slot: The slot identifier for the servo to stop (e.g., "0-0", "1-1"). If None, all servos will be stopped.
+
+        Returns:
+            None
+        """
         if slot is None:
             servos = self._servo_map.values()
         else:
@@ -77,7 +95,15 @@ class Servo:
             servo.duty_u16(0)
 
     async def drop(self, slot: str, quantity: int = 1) -> tuple[bool, int]:
-        """Dispense items and always disable the servo PWM when finished."""
+        """
+        Dispense a specified quantity of items from the given servo slot.
+
+        Args:
+            slot: The slot identifier for the servo (e.g., "0-0", "1-1").
+
+        Returns:
+            A tuple containing a boolean indicating whether the operation was successful and the number of items dispensed
+        """
         print(t("servo.start", slot=slot, quantity=quantity))
         dispensed_count = 0
 
@@ -138,6 +164,7 @@ class Servo:
                     quantity=quantity,
                 )
             )
+
             return True, dispensed_count
         finally:
             # Safety net for timeout, cancellation, or unexpected exceptions.

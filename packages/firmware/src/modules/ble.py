@@ -49,13 +49,40 @@ class BLE:
         self._ble.gatts_set_buffer(self._handle_rx, 512, True)
 
     def is_ready(self) -> bool:
+        """
+        Check if the BLE module is active and ready for use.
+
+        Returns:
+            True if the BLE module is active, False otherwise.
+        """
         return self._ble.active()
 
+    def is_connected(self) -> bool:
+        """
+        Check if there is an active BLE connection.
+
+        Returns:
+            True if there is an active BLE connection, False otherwise.
+        """
+        return self._conn_handle is not None
+
     def activate(self) -> None:
+        """
+        Activate the BLE module if it is not already active.
+
+        Returns:
+            None
+        """
         if not self._ble.active():
             self._ble.active(True)
 
     def start_advertising(self) -> None:
+        """
+        Start BLE advertising with the device name and service UUID.
+
+        Returns:
+            None
+        """
         if not self._ble or self._config is None:
             return
 
@@ -75,6 +102,16 @@ class BLE:
         print(t("ble.advertising", name=name, mac=mac))
 
     def _irq(self, event: int, data: tuple) -> None:
+        """
+        Handle BLE events triggered by the BLE stack.
+
+        Args:
+            event: The BLE event type.
+            data: The event data associated with the BLE event.
+
+        Returns:
+            None
+        """
         if event == _IRQ_CENTRAL_CONNECT:
             print(t("ble.connected"))
             self._conn_handle = data[0]
@@ -100,7 +137,16 @@ class BLE:
                         _ = asyncio.create_task(self._process_buffer())
 
     async def send_code(self, action: int, status: int = 0) -> None:
-        """Pack 4-bit Action and 4-bit Status (or 34-bit Integer payload) into notification frame."""
+        """
+        Send a code to the connected BLE device.
+
+        Args:
+            action: The action code to send.
+            status: The status code to send (default is 0).
+
+        Returns:
+            None
+        """
         if not self._ble or self._conn_handle is None or self._handle_tx is None:
             print(t("ble.not_connected"))
             return
@@ -139,10 +185,13 @@ class BLE:
                 )
             )
 
-    def is_connected(self) -> bool:
-        return self._conn_handle is not None
-
     def disconnect(self) -> None:
+        """
+        Disconnect the current BLE connection if it exists.
+
+        Returns:
+            None
+        """
         if not self._ble or self._conn_handle is None:
             return
 
@@ -155,6 +204,12 @@ class BLE:
         self._rx_buffer = bytearray()
 
     def stop(self) -> None:
+        """
+        Stop the BLE module, disconnect any active connections, and deactivate the BLE stack.
+
+        Returns:
+            None
+        """
         if not self._ble:
             return
         self._ble.gap_advertise(0)
@@ -167,10 +222,22 @@ class BLE:
         self._ble.active(False)
 
     async def _async_start_advertising(self) -> None:
+        """
+        Asynchronously start BLE advertising after a short delay.
+
+        Returns:
+            None
+        """
         await asyncio.sleep(0.1)
         self.start_advertising()
 
     async def _process_buffer(self) -> None:
+        """
+        Process the received data in the RX buffer, parse it as JSON, and handle the command.
+
+        Returns:
+            None
+        """
         if not self._rx_buffer:
             return
 

@@ -31,6 +31,14 @@ class Link:
         self._current_task = None
 
     async def _generate(self) -> None:
+        """
+        Generate a link QR code and display it on the screen.
+        This method checks if a link QR code is already active. If not, it requests a new link token from the API,
+        generates a QR code from the token, and displays it on the screen for 60 seconds.
+
+        Returns:
+            None
+        """
         if self._display.is_link_qr_active():
             return
 
@@ -52,8 +60,12 @@ class Link:
 
     async def start(self) -> None:
         """
-        Trigger link generation after
-        press -> release.
+        Start the link task to monitor the link button and generate a QR code when pressed.
+        This method runs an infinite loop that checks the state of the link button. When the button
+        is pressed and released, it triggers the generation of a link QR code. The task can be stopped by calling the stop() method.
+
+        Returns:
+            None
         """
         if self._current_task is not None:
             return
@@ -95,7 +107,14 @@ class Link:
             self._current_task = None
 
     async def stop(self) -> None:
-        """Stop the link task if it is running."""
+        """
+        Stop the link task if it is currently running.
+        This method cancels the current link task and waits for it to finish. If there is
+        no active link task, it simply returns without doing anything.
+
+        Returns:
+            None
+        """
 
         task = self._current_task
         if task is None:

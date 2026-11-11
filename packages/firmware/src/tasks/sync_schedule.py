@@ -27,14 +27,15 @@ class SyncSchedule:
 
     async def execute(self) -> bool:
         """
-        Fetch today's schedule from the server using the current system date and persist it locally.
+            Fetch today's schedule from the server using the current system date and persist it locally.
 
-        Sync Workflow:
-            - Retrieves current date formatted as YYYY-MM-DD from the utility provider.
-            - Requests schedule data via the API client.
-            - Saves the payload through the local schedule manager.
+            Sync process:
+                - Retrieves current date formatted as YYYY-MM-DD from the utility provider.
+                - Requests schedule data via the API client.
+                - Saves the payload through the local schedule manager.
 
-        :return: None
+            Returns:
+                True if the schedule was successfully fetched and saved, False otherwise.
         """
         today = get_current_time()
         today = f"{today[0]:04d}-{today[1]:02d}-{today[2]:02d}"
@@ -53,9 +54,10 @@ class SyncSchedule:
 
     async def start(self) -> None:
         """
-        Continuously monitor time and trigger sync once per day from 4:00 AM onwards.
+            Continuously monitor time and trigger sync once per day from 4:00 AM onwards.
 
-        :return: None
+            Returns:
+                None
         """
         if self._current_task is not None:
             return
@@ -93,9 +95,10 @@ class SyncSchedule:
 
     async def stop(self) -> None:
         """
-        Stop the continuous sync schedule monitoring.
+            Stop the continuous sync schedule monitoring.
 
-        :return: None
+            Returns:
+                None
         """
 
         task = self._current_task

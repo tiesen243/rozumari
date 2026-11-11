@@ -11,6 +11,8 @@ from lib.uqr import QRCode
 from lib.utils import get_current_time
 from modules.st7735 import ST7735
 
+LOGO = "Rozumari"
+
 
 class Display:
     __instance: Display | None = None
@@ -59,7 +61,15 @@ class Display:
         self.show_boot_logo()
 
     def show_boot_logo(self, duration_ms: int = 2000) -> None:
-        """Render the default boot screen and restart its display duration."""
+        """
+        Show the Rozumari boot logo for a specified duration in milliseconds.
+
+        Args:
+            duration_ms: The duration in milliseconds to display the boot logo (default is 2000 ms).
+
+        Returns:
+            None
+        """
         self._dialog = None
         self._link_qr_until = 0
 
@@ -79,7 +89,12 @@ class Display:
         self._draw_boot_logo()
 
     def refresh_device_info(self) -> None:
-        """Refresh only device name and position on LCD."""
+        """
+        Refresh the device information displayed on the LCD, including the device name and position.
+
+        Returns:
+            None
+        """
 
         # Get the latest Config instance.
         self._config = Config.create()
@@ -119,7 +134,17 @@ class Display:
         title: str,
         body: str = "",
     ) -> None:
-        """Show a compact drop result dialog for 5 seconds."""
+        """
+        Show a result dialog on the LCD with a title and optional body text.
+
+        Args:
+            success: A boolean indicating whether the result is successful (True) or an error (False).
+            title: The title of the result dialog.
+            body: Optional body text to display in the dialog (default is an empty string).
+
+        Returns:
+            None
+        """
         self._dialog = {
             "type": "result",
             "success": success,
@@ -133,7 +158,15 @@ class Display:
         )
 
     def show_schedule_info(self, schedule: dict) -> None:
-        """Show schedule details on the LCD."""
+        """
+        Show a schedule information dialog on the LCD with details of the schedule.
+
+        Args:
+            schedule: A dictionary containing the schedule information to display.
+
+        Returns:
+            None
+        """
         self._dialog = {
             "type": "schedule",
             "success": True,
@@ -151,7 +184,17 @@ class Display:
         body: str = "",
         duration_ms: int = 5000,
     ) -> None:
-        """Show a compact informational dialog."""
+        """
+        Show an informational dialog on the LCD with a title and optional body text.
+
+        Args:
+            title: The title of the informational dialog.
+            body: Optional body text to display in the dialog (default is an empty string).
+            duration_ms: The duration in milliseconds to display the dialog (default is 5000 ms).
+
+        Returns:
+            None
+        """
         self._dialog = {
             "type": "info",
             "success": True,
@@ -170,7 +213,17 @@ class Display:
         attempt: int = 0,
         error: str = "",
     ) -> None:
-        """Show persistent SSE connection status until it is cleared."""
+        """
+        Show a persistent dialog on the LCD indicating the status of a streaming connection.
+
+        Args:
+            status: A string indicating the current status of the streaming connection (e.g., "reconnecting", "disconnected").
+            attempt: An integer representing the current attempt number for reconnecting (default is 0).
+            error: An optional string containing an error message to display (default is an empty string).
+
+        Returns:
+            None
+        """
         self._dialog = {
             "type": "stream",
             "status": status,
@@ -182,7 +235,12 @@ class Display:
         self._last_render = ""
 
     def clear_stream_status(self) -> None:
-        """Clear the persistent SSE connection status dialog."""
+        """
+        Clear the persistent streaming status dialog from the LCD if it is currently displayed.
+
+        Returns:
+            None
+        """
         if self._dialog is not None and self._dialog.get("type") == "stream":
             self._dialog = None
             self._dialog_until = 0
@@ -190,7 +248,12 @@ class Display:
             self._last_render = ""
 
     def is_link_qr_active(self) -> bool:
-        """Return True while the temporary link QR screen is active."""
+        """
+        Check if the link QR code is currently active and should be displayed.
+
+        Returns:
+            True if the link QR code is active, False otherwise.
+        """
         return (
             time.ticks_diff(
                 self._link_qr_until,
@@ -205,7 +268,17 @@ class Display:
         size: int = 2,
         duration_ms: int = 60000,
     ) -> None:
-        """Render QR code without keeping the QR matrix or full framebuffer."""
+        """
+        Show a QR code on the LCD for linking the device, with specified size and duration.
+
+        Args:
+            qr: An instance of the QRCode class representing the QR code to display.
+            size: The size of each QR code module in pixels (default is 2).
+            duration_ms: The duration in milliseconds to display the QR code (default is 60000 ms).
+
+        Returns:
+            None
+        """
         gc.collect()
 
         matrix = qr.get_matrix()
@@ -274,14 +347,18 @@ class Display:
         self._last_render = "link_qr"
 
     def _draw_boot_logo(self) -> None:
-        """Show the Rozumari boot logo centered."""
+        """
+        Draw the Rozumari boot logo on the LCD screen.
+
+        Returns:
+            None
+        """
         width, height = self._lcd.size()
 
-        logo = "Rozumari"
         size = 2
 
         char_width = 6 * size + 1
-        text_width = len(logo) * char_width - 1
+        text_width = len(LOGO) * char_width - 1
 
         x = max(
             0,
@@ -295,11 +372,17 @@ class Display:
 
         self._lcd.fill(self._lcd.BLACK)
 
-        self._lcd.text((x, y), logo, self._lcd.WHITE, size=size)
+        self._lcd.text((x, y), LOGO, self._lcd.WHITE, size=size)
 
         self._lcd.hline((x, y + 19), text_width, self._lcd.BLUE)
 
     def _get_pending_snapshot(self) -> tuple:
+        """
+        Get a snapshot of the next 5 pending schedules, sorted by date and time.
+
+        Returns:
+            A tuple containing the next 5 pending schedules, each represented as a tuple of (id, date, time, item_count).
+        """
         schedules = self._schedule.get_schedules()
 
         pending = [s for s in schedules if s.get("status", "pending") == "pending"]
@@ -321,7 +404,16 @@ class Display:
             for s in pending[:5]
         )
 
-    def _draw_header(self, now) -> None:
+    def _draw_header(self, now: time.struct_time) -> None:
+        """
+        Draw the header section of the LCD screen, including the current time and date.
+
+        Args:
+            now: A time.struct_time object representing the current time.
+
+        Returns:
+            None
+        """
         width, _ = self._lcd.size()
 
         self._lcd.fill_rect(
@@ -353,7 +445,16 @@ class Display:
 
         self._last_date = f"{now[2]:02d}/{now[1]:02d}/{now[0]:04d}"
 
-    def _update_clock(self, now) -> None:
+    def _update_clock(self, now: time.struct_time) -> None:
+        """
+        Update the clock display on the LCD screen if the time has changed.
+
+        Args:
+            now: A time.struct_time object representing the current time.
+
+        Returns:
+            None
+        """
         current = (now[3], now[4], now[5])
         previous = self._last_clock_parts
 
@@ -404,7 +505,16 @@ class Display:
 
             self._last_date = date
 
-    def _draw_main(self, now=None) -> None:
+    def _draw_main(self, now: time.struct_time | None = None) -> None:
+        """
+        Draw the main screen of the LCD, displaying the current time, date, device information, and pending schedules.
+
+        Args:
+            now: A time.struct_time object representing the current time. If None, the current time will be fetched.
+
+        Returns:
+            None
+        """
         width, _height = self._lcd.size()
 
         self._lcd.fill(self._lcd.BLACK)
@@ -492,6 +602,12 @@ class Display:
         self._last_render = "main"
 
     def _update_main(self) -> None:
+        """
+        Update the main screen of the LCD if there are changes in the time, date, or pending schedules.
+
+        Returns:
+            None
+        """
         now = get_current_time()
 
         clock = f"{now[3]:02d}:{now[4]:02d}:{now[5]:02d}"
@@ -508,10 +624,16 @@ class Display:
         ):
             self._update_clock(now)
 
-    def _draw_dialog(
-        self,
-        remaining: int | None = None,
-    ) -> None:
+    def _draw_dialog(self, remaining: int | None = None) -> None:
+        """
+        Draw a dialog on the LCD screen based on the current dialog state.
+
+        Args:
+            remaining: Optional integer representing the remaining time in seconds for the dialog to be displayed. If None, a default value will be used.
+
+        Returns:
+            None
+        """
         if self._dialog is None:
             return
 
@@ -594,6 +716,12 @@ class Display:
         )
 
     def _draw_stream_dialog(self) -> None:
+        """
+        Draw a dialog on the LCD screen indicating the status of a streaming connection.
+
+        Returns:
+            None
+        """
         if self._dialog is None:
             return
 
@@ -635,10 +763,17 @@ class Display:
             error_x = max(box_x1 + 4, (width - len(error) * 6) // 2)
             self._lcd.text((error_x, box_y2 - 14), error, self._lcd.GRAY)
 
-    def _draw_schedule_dialog(
-        self,
-        remaining: int | None = None,
-    ) -> None:
+    def _draw_schedule_dialog(self, remaining: int | None = None) -> None:
+        """
+        Draw a dialog on the LCD screen displaying schedule information.
+
+        Args:
+            remaining: Optional integer representing the remaining time in seconds for the dialog to be displayed. If
+                       None, a default value will be used.
+
+        Returns:
+            None
+        """
         if self._dialog is None:
             return
 
@@ -737,10 +872,16 @@ class Display:
             self._lcd.GRAY,
         )
 
-    def _update_dialog(
-        self,
-        remaining: int,
-    ) -> None:
+    def _update_dialog(self, remaining: int) -> None:
+        """
+        Update the countdown timer in the currently displayed dialog on the LCD screen.
+
+        Args:
+            remaining: An integer representing the remaining time in seconds for the dialog to be displayed.
+
+        Returns:
+            None
+        """
         if self._dialog is None:
             return
 
@@ -808,7 +949,12 @@ class Display:
         )
 
     def show_config_mode(self) -> None:
-        """Render the persistent Config Mode screen."""
+        """
+        Show the configuration mode screen on the LCD, indicating that the device is in configuration mode.
+
+        Returns:
+            None
+        """
         self._dialog = None
         self._link_qr_until = 0
 
@@ -816,36 +962,18 @@ class Display:
 
         self._lcd.fill(self._lcd.BLACK)
 
-        logo = "Rozumari"
         size = 2
 
         char_width = 6 * size + 1
-        text_width = len(logo) * char_width - 1
+        text_width = len(LOGO) * char_width - 1
 
-        logo_x = max(
-            0,
-            (width - text_width) // 2,
-        )
-
-        logo_y = max(
-            0,
-            (height - 38) // 2 - 8,
-        )
-
-        self._lcd.text(
-            (logo_x, logo_y),
-            logo,
-            self._lcd.WHITE,
-            size=size,
-        )
+        logo_x = max(0, (width - text_width) // 2)
+        logo_y = max(0, (height - 38) // 2 - 8)
+        self._lcd.text((logo_x, logo_y), LOGO, self._lcd.WHITE, size=size)
 
         separator_y = logo_y + 19
 
-        self._lcd.hline(
-            (logo_x, separator_y),
-            text_width,
-            self._lcd.BLUE,
-        )
+        self._lcd.hline((logo_x, separator_y), text_width, self._lcd.BLUE)
 
         status = t("lcd.configuring")
 
@@ -965,8 +1093,12 @@ class Display:
             self._current_task = None
 
     async def stop(self) -> None:
-        """Stop the display task if it is running."""
+        """
+        Stop the display service, cancel the current task, and deinitialize the LCD.
 
+        Returns:
+            None
+        """
         task = self._current_task
         if task is None:
             return
