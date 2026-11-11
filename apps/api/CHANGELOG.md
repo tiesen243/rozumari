@@ -1,3 +1,10 @@
+## @rozumari/api@0.2.6
+
+### Bug Fixes
+
+- Fix missing CurrentUser dependency in get device info
+- Added notification when emit message
+
 ## @rozumari/api@0.2.5
 
 ### Bug Fixes
