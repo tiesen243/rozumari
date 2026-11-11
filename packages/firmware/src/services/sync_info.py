@@ -11,26 +11,28 @@ class SyncInfo:
     def __init__(self):
         self._api = Api.create()
 
-    async def execute(self):
+    async def execute(self) -> bool:
         """
         Fetch the latest information from the server and update the local configuration.
 
-        :return: None
+        :return: True if the information was successfully updated, False otherwise.
         """
         config = Config.create()
 
         resp = await self._api.get("/api/devices/info")
         if resp.get("error") is not None:
             print(t("sync_info.error", error=resp.get("error")))
-            return
+            return False
 
         data = resp.get("data", {}).copy()
         data.pop("compartments", None)
 
         if config.set("device", data):
             print(t("sync_info.updated"))
+            return True
         else:
             print(t("sync_info.failed"))
+            return False
 
     @classmethod
     def create(cls) -> SyncInfo:

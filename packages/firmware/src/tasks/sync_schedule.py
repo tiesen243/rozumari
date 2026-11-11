@@ -34,7 +34,7 @@ class SyncSchedule:
             - Requests schedule data via the API client.
             - Saves the payload through the local schedule manager.
 
-        :return: None
+        :return: True if the schedule was successfully fetched and saved, False otherwise.
         """
         today = get_current_time()
         today = f"{today[0]:04d}-{today[1]:02d}-{today[2]:02d}"
