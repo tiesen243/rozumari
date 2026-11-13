@@ -1,9 +1,9 @@
 import type { DeviceNotFound } from '@rozumari/contract/device/schemas/device.error'
 import type { CreateScheduleDto } from '@rozumari/contract/schedule/dto/create-schedule.dto'
 import type { ScheduleInvalid } from '@rozumari/contract/schedule/schemas/schedule.error'
-import type { UserId } from '@rozumari/contract/user/schemas/user.schema'
 import type { CurrentTimeZone } from 'effect/DateTime'
 
+import { CurrentUser } from '@rozumari/contract/auth/middleware'
 import * as Context from 'effect/Context'
 import * as Effect from 'effect/Effect'
 import * as Layer from 'effect/Layer'
@@ -21,11 +21,11 @@ export class CreateScheduleUseCase extends Context.Service<
   CreateScheduleUseCase,
   {
     readonly execute: (
-      input: CreateScheduleDto.Input & { userId: UserId }
+      input: CreateScheduleDto.Input
     ) => Effect.Effect<
       CreateScheduleDto.Output,
       ScheduleInvalid | DeviceNotFound,
-      CurrentTimeZone
+      CurrentTimeZone | CurrentUser
     >
   }
 >()('schedule/application/CreateScheduleUseCase', {
@@ -35,7 +35,8 @@ export class CreateScheduleUseCase extends Context.Service<
     const deviceService = yield* DeviceService
 
     return {
-      execute: Effect.fn(function* execute({ userId, ...input }) {
+      execute: Effect.fn(function* execute(input) {
+        const { userId } = yield* CurrentUser
         const dates = yield* validateAndExpandScheduleDates(input)
 
         const existingSchedules =

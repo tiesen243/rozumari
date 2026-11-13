@@ -52,6 +52,7 @@ const { handler } = HttpRouter.toWebHandler(
 )
 
 Bun.serve<{ topic: string }>({
+  idleTimeout: 15,
   // oxlint-disable-next-line typescript/promise-function-async
   fetch: (request, server) => {
     const url = new URL(request.url)

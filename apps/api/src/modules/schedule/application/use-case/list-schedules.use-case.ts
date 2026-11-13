@@ -1,9 +1,7 @@
 import type { ListSchedulesDto } from '@rozumari/contract/schedule/dto/list-schedules.dto'
-import type {
-  UserId,
-  UserRole,
-} from '@rozumari/contract/user/schemas/user.schema'
 
+import { CurrentUser } from '@rozumari/contract/auth/middleware'
+import { CurrentDevice } from '@rozumari/contract/device/middleware'
 import * as Context from 'effect/Context'
 import * as Effect from 'effect/Effect'
 import * as Layer from 'effect/Layer'
@@ -14,7 +12,7 @@ export class ListSchedulesUseCase extends Context.Service<
   ListSchedulesUseCase,
   {
     readonly execute: (
-      input: ListSchedulesDto.Input & { userId?: UserId; userRole?: UserRole }
+      input: ListSchedulesDto.Input
     ) => Effect.Effect<ListSchedulesDto.Output>
   }
 >()('schedule/application/ListSchedulesUseCase', {
@@ -23,11 +21,17 @@ export class ListSchedulesUseCase extends Context.Service<
 
     return {
       execute: Effect.fn(function* execute(input) {
-        const { userId, userRole, deviceId, startDate, endDate } = input
+        const currentUser = yield* Effect.serviceOption(CurrentUser)
+        const currentDevice = yield* Effect.serviceOption(CurrentDevice)
+        const { deviceId, startDate, endDate } = input
 
         return yield* scheduleRepository.findManyWithItems({
-          userId: userRole === 'admin' ? undefined : userId,
-          deviceId,
+          ...(currentUser._tag === 'Some' &&
+          currentUser.value.userRole === 'user'
+            ? { userId: currentUser.value.userId }
+            : {}),
+          deviceId:
+            currentDevice._tag === 'Some' ? currentDevice.value : deviceId,
           startDate,
           endDate,
         })

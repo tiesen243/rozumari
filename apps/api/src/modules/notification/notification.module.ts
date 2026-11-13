@@ -5,7 +5,7 @@ import type { DeviceService } from '@/modules/device/application/ports/device.se
 import type { Jwt } from '@/shared/application/services/jwt.service'
 import type { StreamService } from '@/shared/application/services/stream.service'
 
-import { CountUnreadNotificationsUseCase } from '@/modules/notification/application/use-case/count-unread-notifications'
+import { CountUnreadNotificationsUseCase } from '@/modules/notification/application/use-case/count-unread-notifications.use-case'
 import { CreateNotificationUseCase } from '@/modules/notification/application/use-case/create-notification.use-case'
 import { ListNotificationsUseCase } from '@/modules/notification/application/use-case/list-notifications.use-case'
 import { ShowNotificationUseCase } from '@/modules/notification/application/use-case/show-notification.use-case'

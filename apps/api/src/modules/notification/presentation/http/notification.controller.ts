@@ -5,7 +5,7 @@ import { ShowNotificationDto } from '@rozumari/contract/notification/dto/show-no
 import * as Effect from 'effect/Effect'
 import * as HttpApiBuilder from 'effect/http-api/HttpApiBuilder'
 
-import { CountUnreadNotificationsUseCase } from '@/modules/notification/application/use-case/count-unread-notifications'
+import { CountUnreadNotificationsUseCase } from '@/modules/notification/application/use-case/count-unread-notifications.use-case'
 import { ListNotificationsUseCase } from '@/modules/notification/application/use-case/list-notifications.use-case'
 import { ShowNotificationUseCase } from '@/modules/notification/application/use-case/show-notification.use-case'
 

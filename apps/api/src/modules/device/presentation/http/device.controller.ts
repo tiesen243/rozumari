@@ -1,5 +1,4 @@
 import { Api } from '@rozumari/contract'
-import { CurrentUser } from '@rozumari/contract/auth/middleware'
 import { AddDeviceDto } from '@rozumari/contract/device/dto/add-device.dto'
 import { DeviceStreamDto } from '@rozumari/contract/device/dto/device-stream.dto'
 import { LinkDeviceDto } from '@rozumari/contract/device/dto/link-device.dto'
@@ -11,7 +10,7 @@ import { UpdateDeviceDto } from '@rozumari/contract/device/dto/update-device.dto
 import * as Effect from 'effect/Effect'
 import * as HttpApiBuilder from 'effect/http-api/HttpApiBuilder'
 import * as HttpServerResponse from 'effect/http/HttpServerResponse'
-import { encodeText } from 'effect/Stream'
+import * as Stream from 'effect/Stream'
 
 import { AddDeviceUseCase } from '@/modules/device/application/use-case/add-device.use-case'
 import { DeviceStreamUseCase } from '@/modules/device/application/use-case/device-stream.use-case'
@@ -71,12 +70,9 @@ export const deviceController = HttpApiBuilder.group(
       )
 
       .handle('subscribe', ({ params: { id } }) =>
-        CurrentUser.pipe(
-          Effect.flatMap(({ userId }) =>
-            DeviceStreamUseCase.use((s) => s.subcribe({ id, userId }))
-          ),
+        DeviceStreamUseCase.use((s) => s.subcribe({ id })).pipe(
           Effect.map((stream) =>
-            HttpServerResponse.stream(stream.pipe(encodeText as never), {
+            HttpServerResponse.stream(stream.pipe(Stream.encodeText as never), {
               contentType: 'text/event-stream',
               headers: {
                 'Cache-Control': 'no-cache',
@@ -89,12 +85,7 @@ export const deviceController = HttpApiBuilder.group(
       )
 
       .handle('emit', ({ params, payload }) =>
-        CurrentUser.pipe(
-          Effect.flatMap(({ userId }) =>
-            DeviceStreamUseCase.use((s) =>
-              s.emit({ ...params, ...payload, userId })
-            )
-          ),
+        DeviceStreamUseCase.use((s) => s.emit({ ...params, ...payload })).pipe(
           Effect.map((data) => new DeviceStreamDto({ data }))
         )
       )
