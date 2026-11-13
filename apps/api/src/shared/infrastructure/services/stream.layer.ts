@@ -14,7 +14,7 @@ export const streamLayer = Layer.effect(
       MutableHashMap.empty<string, StreamService.Connection>()
     )
 
-    const register = (id: string) =>
+    const register = (id: string, userId?: string) =>
       SynchronizedRef.updateEffect(
         connections,
         Effect.fn(
@@ -37,34 +37,49 @@ export const streamLayer = Layer.effect(
 
             return map
           },
-          Effect.tap((map) =>
-            Effect.logInfo(
-              `Registered connection for id: ${id}, total connections: ${MutableHashMap.size(map)}`
+          Effect.tap((map) => {
+            const existingOpt = MutableHashMap.get(map, id)
+            const total =
+              existingOpt._tag === 'Some' ? existingOpt.value.count : 0
+
+            return Effect.logInfo('Registered connection').pipe(
+              Effect.annotateLogs({ id, userId, total })
             )
-          )
+          })
         )
       )
 
-    const unregister = (id: string) =>
-      SynchronizedRef.update(connections, (map) => {
-        const existingOpt = MutableHashMap.get(map, id)
-        if (existingOpt._tag === 'None') return map
+    const unregister = (id: string, userId?: string) =>
+      SynchronizedRef.updateEffect(
+        connections,
+        Effect.fn(
+          // oxlint-disable-next-line require-yield
+          function* unregisterFn(map) {
+            const existingOpt = MutableHashMap.get(map, id)
+            if (existingOpt._tag === 'None') return map
 
-        const current = existingOpt.value
-        if (current.count <= 0) {
-          MutableHashMap.remove(map, id)
-          return map
-        }
+            const current = existingOpt.value
+            if (current.count <= 1) {
+              MutableHashMap.remove(map, id)
+              return map
+            }
 
-        MutableHashMap.set(map, id, {
-          ...current,
-          count: current.count - 1,
-        })
+            MutableHashMap.set(map, id, {
+              ...current,
+              count: current.count - 1,
+            })
 
-        return map
-      }).pipe(
-        Effect.tap(() =>
-          Effect.logInfo(`Unregistered connection for id: ${id}`)
+            return map
+          },
+          Effect.tap((map) => {
+            const existingOpt = MutableHashMap.get(map, id)
+            const total =
+              existingOpt._tag === 'Some' ? existingOpt.value.count : 0
+
+            return Effect.logInfo('Unregistered connection').pipe(
+              Effect.annotateLogs({ id, userId, total })
+            )
+          })
         )
       )
 

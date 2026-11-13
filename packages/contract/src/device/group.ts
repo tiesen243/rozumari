@@ -1,4 +1,5 @@
 import * as HttpApiEndpoint from 'effect/http-api/HttpApiEndpoint'
+import { BadRequest } from 'effect/http-api/HttpApiError'
 import * as HttpApiGroup from 'effect/http-api/HttpApiGroup'
 
 import { AdminMiddleware, AuthMiddleware } from '@/auth/middleware'
@@ -30,7 +31,7 @@ export class DeviceGroup extends HttpApiGroup.make('device')
     HttpApiEndpoint.get('show', '/:id', {
       params: ShowDeviceDto.Input,
       success: ShowDeviceDto,
-      error: [DeviceNotFound],
+      error: [BadRequest, DeviceNotFound],
     })
   )
 
@@ -80,6 +81,7 @@ export class DeviceGroup extends HttpApiGroup.make('device')
     HttpApiEndpoint.get('subscribe', '/:id/subscribe', {
       params: DeviceStreamDto.Params,
       success: DeviceStreamDto.Stream,
+      error: [BadRequest, DeviceNotFound],
     })
   )
 
@@ -88,7 +90,7 @@ export class DeviceGroup extends HttpApiGroup.make('device')
       params: DeviceStreamDto.Params,
       payload: DeviceStreamDto.Emit,
       success: DeviceStreamDto,
-      error: [DeviceNotFound],
+      error: [BadRequest],
     })
   )
 

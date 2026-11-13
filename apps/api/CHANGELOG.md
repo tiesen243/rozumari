@@ -1,3 +1,10 @@
+## @rozumari/api@0.2.7
+
+### Patch Changes
+
+- Bump deps
+- Fixes CurrentUser and CurrentDevice deps
+
 ## @rozumari/api@0.2.6
 
 ### Bug Fixes

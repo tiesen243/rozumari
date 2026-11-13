@@ -257,7 +257,7 @@ class Streaming:
                     await self._api.stream(
                         endpoint="/api/devices/subscribe",
                         callback=self._handle_payload,
-                        timeout=35,
+                        timeout=15,
                         on_connect=self._on_stream_connected,
                     )
 

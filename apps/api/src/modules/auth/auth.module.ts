@@ -11,7 +11,7 @@ import { LogoutUseCase } from '@/modules/auth/application/use-case/logout.use-ca
 import { OAuthUseCase } from '@/modules/auth/application/use-case/oauth.use-case'
 import { RefreshTokenUseCase } from '@/modules/auth/application/use-case/refresh-token.use-case'
 import { RegisterUseCase } from '@/modules/auth/application/use-case/register.use-case'
-import { ResetPasswordUseCase } from '@/modules/auth/application/use-case/reset-password'
+import { ResetPasswordUseCase } from '@/modules/auth/application/use-case/reset-password.use-case'
 import { UnlinkUseCase } from '@/modules/auth/application/use-case/unlink.use-case'
 import { WhoAmIUseCase } from '@/modules/auth/application/use-case/whoami.use-case'
 import { AuthInfrastructureModule } from '@/modules/auth/infrastructure/infrastructure.module'

@@ -7,8 +7,8 @@ import * as Context from 'effect/Context'
 export class StreamService extends Context.Service<
   StreamService,
   {
-    readonly register: (id: string) => Effect.Effect<void>
-    readonly unregister: (id: string) => Effect.Effect<void>
+    readonly register: (id: string, userId?: string) => Effect.Effect<void>
+    readonly unregister: (id: string, userId?: string) => Effect.Effect<void>
 
     readonly publish: (id: string, message: string) => Effect.Effect<boolean>
     readonly subscribe: (id: string) => Stream.Stream<string>

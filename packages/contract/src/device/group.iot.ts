@@ -1,4 +1,5 @@
 import * as HttpApiEndpoint from 'effect/http-api/HttpApiEndpoint'
+import { BadRequest } from 'effect/http-api/HttpApiError'
 import * as HttpApiGroup from 'effect/http-api/HttpApiGroup'
 
 import { DeviceStreamDto } from '@/device/dto/device-stream.dto'
@@ -13,7 +14,7 @@ export class DeviceIoTGroup extends HttpApiGroup.make('device-iot')
   .add(
     HttpApiEndpoint.get('info', '/info', {
       success: ShowDeviceDto,
-      error: [DeviceNotFound],
+      error: [BadRequest, DeviceNotFound],
     })
   )
 
@@ -35,6 +36,7 @@ export class DeviceIoTGroup extends HttpApiGroup.make('device-iot')
   .add(
     HttpApiEndpoint.get('subscribe', '/subscribe', {
       success: DeviceStreamDto.Stream,
+      error: [BadRequest, DeviceNotFound],
     })
   )
 
@@ -42,6 +44,7 @@ export class DeviceIoTGroup extends HttpApiGroup.make('device-iot')
     HttpApiEndpoint.post('emit', '/emit', {
       payload: DeviceStreamDto.Emit,
       success: DeviceStreamDto,
+      error: [BadRequest],
     })
   )
 

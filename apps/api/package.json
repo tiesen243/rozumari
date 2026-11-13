@@ -1,6 +1,6 @@
 {
   "name": "@rozumari/api",
-  "version": "0.2.6",
+  "version": "0.2.7",
   "private": false,
   "bin": "./dist/cli.mjs",
   "type": "module",
@@ -21,8 +21,8 @@
     "@openrouter/ai-sdk-provider": "^3.1.0",
     "@rozumari/contract": "workspace:*",
     "@rozumari/lib": "workspace:*",
-    "@vercel/functions": "^3.11.1",
-    "ai": "^7.0.169",
+    "@vercel/functions": "^3.11.2",
+    "ai": "^7.0.172",
     "chat": "^4.44.0",
     "drizzle-orm": "^1.0.0-rc.5",
     "effect": "catalog:effect"
