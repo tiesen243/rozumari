@@ -1,3 +1,10 @@
+## @rozumari/mobile@0.2.10
+
+### Patch Changes
+
+- Bump deps
+- Fixes CurrentUser and CurrentDevice deps
+
 ## @rozumari/mobile@0.2.9
 
 ### Patch Changes
