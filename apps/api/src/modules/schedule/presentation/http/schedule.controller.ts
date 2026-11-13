@@ -1,5 +1,4 @@
 import { Api } from '@rozumari/contract'
-import { CurrentUser } from '@rozumari/contract/auth/middleware'
 import { CreateScheduleDto } from '@rozumari/contract/schedule/dto/create-schedule.dto'
 import { ListSchedulesDto } from '@rozumari/contract/schedule/dto/list-schedules.dto'
 import { ShowScheduleDto } from '@rozumari/contract/schedule/dto/show-schedule.dto'
@@ -18,12 +17,7 @@ export const scheduleController = HttpApiBuilder.group(
   (handlers) =>
     handlers
       .handle('list', ({ query }) =>
-        CurrentUser.pipe(
-          Effect.flatMap(({ userId, userRole }) =>
-            ListSchedulesUseCase.use((s) =>
-              s.execute({ ...query, userId, userRole })
-            )
-          ),
+        ListSchedulesUseCase.use((s) => s.execute(query)).pipe(
           Effect.map((data) => ListSchedulesDto.make({ data }))
         )
       )
@@ -35,10 +29,7 @@ export const scheduleController = HttpApiBuilder.group(
       )
 
       .handle('create', ({ payload }) =>
-        CurrentUser.pipe(
-          Effect.flatMap(({ userId }) =>
-            CreateScheduleUseCase.use((s) => s.execute({ ...payload, userId }))
-          ),
+        CreateScheduleUseCase.use((s) => s.execute(payload)).pipe(
           Effect.map((data) => CreateScheduleDto.make({ data }))
         )
       )
